@@ -1,7 +1,6 @@
 import { User } from "../models/user.model.js";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import { generateToken, generateRefreshToken } from "../utils/jwt.js";
+import { generateToken } from "../utils/jwt.js";
 import { AppError } from "../utils/AppError.js";
 
 export const registerUser = async (req, res, next) => {
@@ -20,10 +19,21 @@ export const registerUser = async (req, res, next) => {
 
         const user = await User.create({ name, email, password, role });
 
+        const token = generateToken({ id: user._id });
+        
+        res.cookie("accessToken", token, {
+            httpOnly: true,
+            sameSite: "none",
+            secure: true,
+            path: "/",
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        });
+
         res.json({
             success: true,
             message: "User registered!",
-            user
+            user,
+            token
         });
         
     } catch (error) {
@@ -52,22 +62,12 @@ export const loginUser = async (req, res, next) => {
         }
 
         const accessToken = generateToken({id: user._id, role: user.role});
-        const refreshToken = generateRefreshToken({id: user._id, role: user.role});
 
         res.cookie("accessToken", accessToken, {
             httpOnly: true,
             secure: false,        
             sameSite: "lax",     
             path: "/",           
-            maxAge: 15 * 60 * 1000, 
-            domain: undefined,  
-        });
-
-        res.cookie("refreshToken", refreshToken, {
-            httpOnly: true,
-            secure: false,
-            sameSite: "lax",     
-            path: "/",
             maxAge: 7 * 24 * 60 * 60 * 1000, 
             domain: undefined,  
         });
@@ -83,36 +83,36 @@ export const loginUser = async (req, res, next) => {
     }
 };
 
-export const refreshAccessToken = async (req, res, next) => {
-  try {
-    const token = req.cookies.refreshToken;
+// export const refreshAccessToken = async (req, res, next) => {
+//   try {
+//     const token = req.cookies.refreshToken;
 
-    if (!token) return next(new AppError("Refresh token missing", 401));
+//     if (!token) return next(new AppError("Refresh token missing", 401));
 
-    const decode = jwt.verify(token, process.env.REFRESH_SECRET);
+//     const decode = jwt.verify(token, process.env.REFRESH_SECRET);
 
-    const newAccessToken = generateToken({
-      id: decode.id,
-      role: decode.role,
-    });
+//     const newAccessToken = generateToken({
+//       id: decode.id,
+//       role: decode.role,
+//     });
 
-    res.cookie("accessToken", newAccessToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: "lax",
-      path: "/",
-      maxAge: 15 * 60 * 1000, 
-    });
+//     res.cookie("accessToken", newAccessToken, {
+//       httpOnly: true,
+//       secure: false,
+//       sameSite: "lax",
+//       path: "/",
+//       maxAge: 15 * 60 * 1000, 
+//     });
 
-    res.json({
-      success: true,
-      accessToken: newAccessToken,
-    });
+//     res.json({
+//       success: true,
+//       accessToken: newAccessToken,
+//     });
 
-  } catch (error) {
-    return next(new AppError("Invalid or expired refresh token", 401));
-  }
-};
+//   } catch (error) {
+//     return next(new AppError("Invalid or expired refresh token", 401));
+//   }
+// };
 
 
 export const logoutUser = (req, res) => {
@@ -120,17 +120,37 @@ export const logoutUser = (req, res) => {
     httpOnly: true,
     secure: false,
     sameSite: "lax",
-    path: "/",
-  });
-  res.clearCookie("refreshToken", {
-    httpOnly: true,
-    secure: false,
-    sameSite: "lax",
-    path: "/",
   });
 
   res.json({
     success: true,
     message: "Logged out successfully"
   });
+};
+
+export const getMyProfile = (req, res) => {
+    res.json({
+        success: true,
+        user: req.user,
+    });
+};
+
+export const updateProfile = async (req, res, next) => {
+    try {
+        const { name, email } = req.body;
+        const user = req.user;
+
+        if (name) user.name = name;
+        if (email) user.email = email;
+
+        await user.save();
+
+        res.json({
+            success: true,
+            message: "Profile updated successfully",
+            user
+        });
+    } catch (error) {
+        next(error);
+    }
 };

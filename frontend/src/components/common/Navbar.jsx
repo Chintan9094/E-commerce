@@ -1,15 +1,23 @@
-import { Link } from 'react-router-dom';
-import { 
-  ShoppingCartIcon, 
-  HeartIcon, 
-  UserIcon,
-  MagnifyingGlassIcon,
-  Bars3Icon
-} from '@heroicons/react/24/outline';
+import { Link, useNavigate } from 'react-router-dom';
+import { ShoppingCartIcon, HeartIcon, UserIcon, MagnifyingGlassIcon, Bars3Icon, ArrowLeftStartOnRectangleIcon } from '@heroicons/react/24/outline';
 import { useState } from 'react';
+import { logoutUser } from '../../services/auth.service';
+import { useAuth } from '../../context/AuthContext';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { setUser } = useAuth();
+  const navigate = useNavigate();
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+    } catch (error) {
+      console.log("Logout API error (ignoring)", error);
+    } finally {
+      setUser(null);
+      navigate("/user/login", { replace: true });
+    }
+  };
 
   return (
     <nav className="bg-white shadow-md sticky top-0 z-40">
@@ -56,6 +64,13 @@ const Navbar = () => {
               <Link to="/user/profile" className="text-gray-600 hover:text-gray-900">
                 <UserIcon className="w-6 h-6" />
               </Link>
+            </div>
+            <div className="relative">
+              <button 
+              onClick={handleLogout} 
+              className="text-gray-600 hover:text-gray-900">
+                <ArrowLeftStartOnRectangleIcon className="w-6 h-6" />
+              </button>
             </div>
 
             <button
