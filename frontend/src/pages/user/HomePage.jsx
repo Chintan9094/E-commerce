@@ -108,7 +108,7 @@ const HomePage = () => {
                   </div>
                   <div className="flex items-center space-x-2">
                     <span className="text-xl font-bold text-gray-900">
-                      ₹{product.averageRating} ({product.numReviews})
+                      ₹{product.price.toLocaleString()}
                     </span>
                     <span className="text-sm text-gray-500 line-through">
                       ₹{product.originalPrice.toLocaleString()}
