@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { FunnelIcon } from "@heroicons/react/24/outline";
-import { getProducts, getProductsByQuery } from "../../services/product.service";
+import {
+  getProducts,
+  getProductsByQuery,
+} from "../../services/product.service";
 
 const ProductListingPage = () => {
   const [showFilters, setShowFilters] = useState(false);
@@ -19,9 +22,7 @@ const ProductListingPage = () => {
   };
 
   useEffect(() => {
-    const paramsObj = Object.fromEntries(
-      new URLSearchParams(location.search)
-    );
+    const paramsObj = Object.fromEntries(new URLSearchParams(location.search));
 
     const fetchProducts = async () => {
       try {
@@ -125,20 +126,46 @@ const ProductListingPage = () => {
               <Link
                 key={product._id}
                 to={`/user/product/${product._id}`}
-                className="bg-white rounded-lg shadow hover:shadow-lg"
+                className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow overflow-hidden group"
               >
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="h-52 w-full object-cover rounded-t-lg"
-                />
+                <div className="aspect-square overflow-hidden bg-gray-100">
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
 
                 <div className="p-4">
-                  <h3 className="font-semibold">{product.name}</h3>
-                  <p className="text-gray-600">₹{product.price}</p>
-                  <p className="text-sm text-gray-500">
-                    ⭐ {product.averageRating} ({product.numReviews})
-                  </p>
+                  <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
+                    {product.name}
+                  </h3>
+
+                  <div className="flex items-center mb-2">
+                    <span className="text-yellow-400">★</span>
+                    <span className="ml-1 text-sm text-gray-600">
+                      {product.averageRating} ({product.numReviews})
+                    </span>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xl font-bold text-gray-900">
+                      ₹{product.price.toLocaleString()}
+                    </span>
+
+                    <span className="text-sm text-gray-500 line-through">
+                      ₹{product.originalPrice.toLocaleString()}
+                    </span>
+
+                    <span className="text-sm text-green-600 font-semibold">
+                      {Math.round(
+                        ((product.originalPrice - product.price) /
+                          product.originalPrice) *
+                          100
+                      )}
+                      % off
+                    </span>
+                  </div>
                 </div>
               </Link>
             ))}
