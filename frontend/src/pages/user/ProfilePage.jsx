@@ -1,16 +1,19 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { UserIcon, EnvelopeIcon, PhoneIcon, MapPinIcon } from '@heroicons/react/24/outline';
 import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
+import { useAuth } from '../../context/AuthContext';
+import { getProfile } from '../../services/auth.service';
 
 const ProfilePage = () => {
   const [isEditing, setIsEditing] = useState(false);
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    phone: '+91 9876543210',
-    dob: '1990-01-15',
-    gender: 'male',
+    name: user?.name || "",
+    email: user?.email || "",
+    // phone: user?.phone || "",
+    // dob: user?.dob || "",
+    // gender: user?.gender || "",
   });
 
   const handleChange = (e) => {
@@ -21,6 +24,20 @@ const ProfilePage = () => {
     e.preventDefault();
     setIsEditing(false);
   };
+
+  useEffect(() => {
+  const fetchProfile = async () => {
+    try {
+      const res = await getProfile();
+      setFormData(res.data.user);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  fetchProfile();
+}, []);
+
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -81,7 +98,7 @@ const ProfilePage = () => {
               )}
             </div>
 
-            <div>
+            {/* <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 <PhoneIcon className="w-4 h-4 inline mr-1" />
                 Phone Number
@@ -133,7 +150,7 @@ const ProfilePage = () => {
               ) : (
                 <p className="text-gray-900 py-2 capitalize">{formData.gender}</p>
               )}
-            </div>
+            </div> */}
           </div>
 
           {isEditing && (

@@ -51,13 +51,13 @@ const Footer = () => {
           <div>
             <h4 className="text-white font-semibold mb-4">Contact Us</h4>
             <ul className="space-y-2 text-sm">
-              <li>Email: support@shophub.com</li>
-              <li>Phone: +1 (555) 123-4567</li>
+              <li>Email: chintandesai249@gmail.com</li>
+              <li>Phone: +91 7600686067</li>
               <li>
                 <div className="flex space-x-4 mt-4">
-                  <a href="#" className="hover:text-white">Facebook</a>
-                  <a href="#" className="hover:text-white">Twitter</a>
-                  <a href="#" className="hover:text-white">Instagram</a>
+                  <a href="https://github.com/Chintan9094" className="hover:text-white">GitHub</a>
+                  <a href="https://www.linkedin.com/in/chintan-rabari-a54a712b9/" className="hover:text-white">LinkedIn</a>
+                  <a href="https://x.com/@Chintandesai94" className="hover:text-white">Twitter</a>
                 </div>
               </li>
             </ul>
@@ -65,7 +65,7 @@ const Footer = () => {
         </div>
 
         <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm">
-          <p>&copy; 2024 ShopHub. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} ShopHub. All rights reserved.</p>
         </div>
       </div>
     </footer>

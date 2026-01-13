@@ -8,6 +8,7 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { setUser } = useAuth();
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
   const handleLogout = async () => {
     try {
       await logoutUser();
@@ -18,6 +19,13 @@ const Navbar = () => {
       navigate("/user/login", { replace: true });
     }
   };
+
+const handleSearch = () => {
+  if (!searchQuery.trim()) return;
+  navigate(`/user/products?search=${searchQuery}`);
+  setSearchQuery("");
+};
+
 
   return (
     <nav className="bg-white shadow-md sticky top-0 z-40">
@@ -32,10 +40,12 @@ const Navbar = () => {
               <input
                 type="text"
                 placeholder="Search products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <MagnifyingGlassIcon className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
-              <button className="bg-blue-600 text-white px-6 py-2 rounded-r-lg hover:bg-blue-700">
+              <button onClick={handleSearch} className="bg-blue-600 text-white px-6 py-2 rounded-r-lg hover:bg-blue-700">
                 Search
               </button>
             </div>

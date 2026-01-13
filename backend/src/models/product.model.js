@@ -29,6 +29,10 @@ const productSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    originalPrice: {
+      type: Number,
+      required: true,
+    },
     description: {
       type: String,
       maxlength: 500,
@@ -62,5 +66,11 @@ const productSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+productSchema.index({
+  name: "text",
+  description: "text",
+  category: "text"
+});
 
 export const Product = mongoose.model("Product", productSchema);
