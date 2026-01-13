@@ -84,7 +84,7 @@ const HomePage = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {featuredProducts.map((product) => (
               <Link
-                key={product.id}
+                key={product._id}
                 to={`/user/product/${product._id}`}
                 className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow overflow-hidden group"
               >
@@ -102,12 +102,13 @@ const HomePage = () => {
                   <div className="flex items-center mb-2">
                     <span className="text-yellow-400">★</span>
                     <span className="ml-1 text-sm text-gray-600">
-                      {product.rating} ({product.reviews})
+                      {product.averageRating} ({product.numReviews})
+
                     </span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <span className="text-xl font-bold text-gray-900">
-                      ₹{product.price.toLocaleString()}
+                      ₹{product.averageRating} ({product.numReviews})
                     </span>
                     <span className="text-sm text-gray-500 line-through">
                       ₹{product.originalPrice.toLocaleString()}
