@@ -16,16 +16,6 @@ const ProductDetailsPage = () => {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const reviews = [
-    {
-      id: 1,
-      user: "John Doe",
-      rating: 5,
-      date: "2024-01-15",
-      comment: "Excellent product!",
-    },
-  ];
-
   useEffect(() => {
     const fetchProduct = async () => {
       try {
@@ -46,6 +36,7 @@ const ProductDetailsPage = () => {
 
   const rating = product.averageRating || 0;
   const reviewsCount = product.numReviews || 0;
+  const reviews = product.reviews || [];
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -103,7 +94,7 @@ const ProductDetailsPage = () => {
                 {Math.round(
                   ((product.originalPrice - product.price) /
                     product.originalPrice) *
-                    100
+                    100,
                 )}
                 % off
               </span>
@@ -156,10 +147,14 @@ const ProductDetailsPage = () => {
 
       <div className="border-t pt-8">
         <h2 className="text-2xl font-bold mb-6">Customer Reviews</h2>
-        {reviews.map((review) => (
-          <div key={review.id} className="border-b pb-6">
-            <h4 className="font-semibold">{review.user}</h4>
+
+        {reviews.map((review, index) => (
+          <div key={index} className="border-b pb-6">
+            <h4 className="font-semibold">{review.name}</h4>
             <p className="text-gray-600">{review.comment}</p>
+            <p className="text-sm text-gray-400">
+              {new Date(review.createdAt).toLocaleString()}
+            </p>
           </div>
         ))}
       </div>

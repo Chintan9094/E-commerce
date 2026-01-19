@@ -6,43 +6,46 @@ export const addReview = async (req, res, next) => {
         const { rating, comment } = req.body;
         const productId = req.params.id;
 
+        const numericRating = Number(rating);
+
+        if (!numericRating || numericRating < 1 || numericRating > 5) {
+            return next(new AppError("Rating must be between 1 and 5", 400));
+        }
+
         const product = await Product.findById(productId);
 
-        if(!product){
-            return next(new AppError("Product not found",404));
+        if (!product) {
+            return next(new AppError("Product not found", 404));
         }
 
         const existingReview = product.reviews.find(
-            (rev) => rev.user.toString() === req.user._id.toString()
+            rev => rev.user.toString() === req.user._id.toString()
         );
 
-        if(existingReview){
-            existingReview.rating = rating;
+        if (existingReview) {
+            existingReview.rating = numericRating;
             existingReview.comment = comment;
         } else {
             product.reviews.push({
                 user: req.user._id,
                 name: req.user.name,
-                rating,
+                rating: numericRating,
                 comment
             });
         }
+
         product.numReviews = product.reviews.length;
-        
-        if(product.reviews.length > 0){
-            product.averageRating = product.reviews.reduce((acc, r) => acc + r.rating, 0) / product.reviews.length;
-        } else{
-            product.averageRating = 0;
-        }
+
+        product.averageRating =
+            product.reviews.reduce((acc, r) => acc + r.rating, 0) / product.reviews.length;
 
         await product.save();
 
-        res.json({
+        res.status(200).json({
             success: true,
-            message: "Review submitted",
-            product
+            message: "Review submitted successfully"
         });
-        
+
     } catch (error) {
         next(error);
     }

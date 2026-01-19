@@ -13,8 +13,17 @@ const reviewSchema = new mongoose.Schema({
   rating: {
     type: Number,
     default: 0
-  }
-}, { _id: false });
+  },
+  comment: {
+      type: String,
+      required: true  
+    },
+      createdAt: {
+      type: Date,
+      default: Date.now 
+    }
+},
+ { _id: false });
 
 const productSchema = new mongoose.Schema(
   {
