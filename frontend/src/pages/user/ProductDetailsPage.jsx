@@ -8,6 +8,8 @@ import {
 import { HeartIcon as HeartOutlineIcon } from "@heroicons/react/24/outline";
 import Button from "../../components/common/Button";
 import { getProductById } from "../../services/product.service";
+import { addToCart } from "../../services/cart.service";
+import { toast } from "react-toastify";
 
 const ProductDetailsPage = () => {
   const { id } = useParams();
@@ -15,6 +17,7 @@ const ProductDetailsPage = () => {
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [cartItems, setCartItems] = useState([]);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -37,6 +40,32 @@ const ProductDetailsPage = () => {
   const rating = product.averageRating || 0;
   const reviewsCount = product.numReviews || 0;
   const reviews = product.reviews || [];
+
+  const addInCart = async (product) => {
+    try {
+      await addToCart(product._id, quantity);
+  
+      setCartItems(prev => {
+        const exists = prev.find(item => item.product._id === product._id);
+  
+        if (exists) {
+          return prev.map(item =>
+            item.product._id === product._id
+              ? { ...item, quantity: item.quantity + quantity }
+              : item
+          );
+        }
+  
+        return [...prev, { product, quantity }];
+      });
+  
+      setQuantity(1);
+      toast.success(`${product.name} added to cart`);
+  
+    } catch (error) {
+      toast.error("Failed to add item to cart");
+    }
+  };  
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -80,7 +109,7 @@ const ProductDetailsPage = () => {
               ))}
             </div>
             <span className="ml-2 text-gray-600">
-              {rating} ({reviewsCount} reviews)
+              {rating.toFixed(1)} ({reviewsCount} reviews)
             </span>
           </div>
 
@@ -126,7 +155,7 @@ const ProductDetailsPage = () => {
           </div>
 
           <div className="flex space-x-4">
-            <Button className="flex-1 flex items-center justify-center">
+            <Button onClick={() => addInCart(product)} className="flex-1 flex items-center justify-center">
               <ShoppingCartIcon className="w-5 h-5 mr-2" />
               Add to Cart
             </Button>

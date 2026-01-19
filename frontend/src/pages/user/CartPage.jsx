@@ -1,42 +1,60 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { TrashIcon, PlusIcon, MinusIcon } from '@heroicons/react/24/outline';
 import Button from '../../components/common/Button';
+import { getMyCart, removeFromCart, updateCartQuantity } from '../../services/cart.service';
 
 const CartPage = () => {
-  const [cartItems, setCartItems] = useState([
-    {
-      id: 1,
-      productId: 1,
-      name: 'Wireless Headphones',
-      price: 2999,
-      image: 'https://via.placeholder.com/150x150?text=Headphones',
-      quantity: 2,
-      stock: 50,
-    },
-    {
-      id: 2,
-      productId: 2,
-      name: 'Smart Watch',
-      price: 8999,
-      image: 'https://via.placeholder.com/150x150?text=Smart+Watch',
-      quantity: 1,
-      stock: 30,
-    },
-  ]);
+  const [cartItems, setCartItems] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const updateQuantity = (id, newQuantity) => {
+  useEffect(() => {
+    const fetchCart = async () => {
+      try {
+        const res = await getMyCart()
+        setCartItems(res.data?.cart.items || []);
+      } catch (error) {
+        console.error("Error fetching product:", error);
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchCart();
+  }, []);
+
+  if (loading) return <div className="p-10">Loading...</div>;
+
+  const updateQuantity = async (productId, newQuantity) => {
     if (newQuantity < 1) return;
-    setCartItems(cartItems.map(item =>
-      item.id === id ? { ...item, quantity: Math.min(newQuantity, item.stock) } : item
-    ));
+  
+    try {
+      await updateCartQuantity(productId, newQuantity);
+
+      setCartItems(prev =>
+        prev.map(item =>
+          item.product._id === productId
+            ? { ...item, quantity: newQuantity }
+            : item
+        )
+      );
+    } catch (error) {
+      console.error("Quantity update failed:", error);
+    }
   };
 
-  const removeItem = (id) => {
-    setCartItems(cartItems.filter(item => item.id !== id));
+  const removeItem = async (productId) => {
+    try {
+      await removeFromCart(productId);
+  
+      setCartItems(prev =>
+        prev.filter(item => item.product._id !== productId)
+      );
+    } catch (error) {
+      console.error("Remove item failed:", error);
+    }
   };
-
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  
+  const subtotal = cartItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
   const shipping = subtotal > 5000 ? 0 : 99;
   const tax = subtotal * 0.18;
   const total = subtotal + shipping + tax;
@@ -60,33 +78,33 @@ const CartPage = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-4">
-          {cartItems.map((item) => (
+          {cartItems.map((item, index) => (
             <div
-              key={item.id}
+              key={index}
               className="bg-white rounded-lg shadow-md p-4 flex flex-col sm:flex-row gap-4"
             >
-              <Link to={`/user/product/${item.productId}`} className="shrink-0">
+              <Link to={`/user/product/${item.product.productId}`} className="shrink-0">
                 <img
-                  src={item.image}
-                  alt={item.name}
+                  src={item.product.image}
+                  alt={item.product.name}
                   className="w-full sm:w-32 h-32 object-cover rounded-lg"
                 />
               </Link>
 
               <div className="flex-1">
-                <Link to={`/user/product/${item.productId}`}>
+                <Link to={`/user/product/${item.product.productId}`}>
                   <h3 className="font-semibold text-gray-900 hover:text-blue-600 mb-2">
-                    {item.name}
+                    {item.product.name}
                   </h3>
                 </Link>
                 <p className="text-xl font-bold text-gray-900 mb-4">
-                  ₹{item.price.toLocaleString()}
+                  ₹{item.product.price}
                 </p>
 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center border rounded-lg">
                     <button
-                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                      onClick={() => updateQuantity(item.product._id, item.quantity - 1)}
                       className="p-2 hover:bg-gray-100"
                       disabled={item.quantity <= 1}
                     >
@@ -94,7 +112,7 @@ const CartPage = () => {
                     </button>
                     <span className="px-4 py-2">{item.quantity}</span>
                     <button
-                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      onClick={() => updateQuantity(item.product._id, item.quantity + 1)}
                       className="p-2 hover:bg-gray-100"
                       disabled={item.quantity >= item.stock}
                     >
@@ -104,10 +122,10 @@ const CartPage = () => {
 
                   <div className="flex items-center space-x-4">
                     <span className="text-lg font-semibold">
-                      ₹{(item.price * item.quantity).toLocaleString()}
+                      ₹{(item.product.price * item.quantity).toLocaleString()}
                     </span>
                     <button
-                      onClick={() => removeItem(item.id)}
+                      onClick={() => removeItem(item.product._id)}
                       className="text-red-600 hover:text-red-700 p-2"
                     >
                       <TrashIcon className="w-5 h-5" />
@@ -133,7 +151,7 @@ const CartPage = () => {
                 <span>{shipping === 0 ? 'Free' : `₹${shipping}`}</span>
               </div>
               <div className="flex justify-between text-gray-600">
-                <span>Tax (GST)</span>
+                <span>Tax (GST) 18%</span>
                 <span>₹{tax.toFixed(2)}</span>
               </div>
               {subtotal < 5000 && (

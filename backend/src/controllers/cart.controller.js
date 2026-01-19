@@ -94,3 +94,35 @@ export const getMyCart = async (req, res, next) => {
         next(error);
     }
 };
+
+export const updateCartQuantity = async (req, res, next) => {
+  try {
+    const { productId, quantity } = req.body;
+
+    if (quantity < 1) {
+      return next(new AppError("Quantity must be at least 1", 400));
+    }
+
+    const cart = await Cart.findOne({ user: req.user._id });
+
+    if (!cart) return next(new AppError("Cart not found", 404));
+
+    const item = cart.items.find(
+      (i) => i.product.toString() === productId
+    );
+
+    if (!item) return next(new AppError("Item not found in cart", 404));
+
+    item.quantity = quantity;
+
+    await cart.save();
+
+    res.json({
+      success: true,
+      message: "Quantity updated",
+      cart,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
