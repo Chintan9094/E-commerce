@@ -3,9 +3,13 @@ import { Link } from "react-router-dom";
 import { HeartIcon, ShoppingCartIcon } from "@heroicons/react/24/solid";
 import { HeartIcon as HeartOutlineIcon } from "@heroicons/react/24/outline";
 import Button from "../../components/common/Button";
+import { addToCart } from "../../services/cart.service";
+import { toast } from "react-toastify";
 
 const WishlistPage = () => {
   const [wishlistItems, setWishlistItems] = useState([]);
+  const [quantity, setQuantity] = useState(1);
+  const [cartItems, setCartItems] = useState([]);
 
   useEffect(() => {
     const data = JSON.parse(localStorage.getItem("wishlist")) || [];
@@ -20,6 +24,33 @@ const WishlistPage = () => {
     window.dispatchEvent(new Event("wishlistUpdated"));
     
   };
+
+    const addInCart = async (product) => {
+      try {
+        await addToCart(product._id, quantity);
+  
+        setCartItems((prev) => {
+          const exists = prev.find((item) => item.product._id === product._id);
+  
+          if (exists) {
+            return prev.map((item) =>
+              item.product._id === product._id
+                ? { ...item, quantity: item.quantity + quantity }
+                : item,
+            );
+          }
+  
+          return [...prev, { product, quantity }];
+        });
+  
+        setQuantity(1);
+        toast.success(`${product.name} added to cart`);
+  
+        window.dispatchEvent(new Event("cartUpdated"));
+      } catch (error) {
+        toast.error("Failed to add item to cart");
+      }
+    };
 
   if (wishlistItems.length === 0) {
     return (
@@ -101,6 +132,7 @@ const WishlistPage = () => {
 
             <div className="px-4 pb-4">
               <Button
+                onClick={() => addInCart(item)}
                 variant="primary"
                 size="sm"
                 className="w-full flex items-center justify-center"
