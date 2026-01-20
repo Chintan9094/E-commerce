@@ -1,43 +1,59 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { MapPinIcon, CreditCardIcon, TruckIcon } from '@heroicons/react/24/outline';
-import Input from '../../components/common/Input';
-import Button from '../../components/common/Button';
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import {
+  MapPinIcon,
+  CreditCardIcon,
+  TruckIcon,
+} from "@heroicons/react/24/outline";
+import Input from "../../components/common/Input";
+import Button from "../../components/common/Button";
+import { getMyAddresses } from "../../services/address.service";
+import { getMyCart } from "../../services/cart.service";
 
 const CheckoutPage = () => {
-  const [paymentMethod, setPaymentMethod] = useState('card');
-  const [selectedAddress, setSelectedAddress] = useState(1);
+  const [paymentMethod, setPaymentMethod] = useState("card");
+  const [selectedAddress, setSelectedAddress] = useState(null);
+  const [addresses, setAddresses] = useState([]);
+  const [cartItems, setCartItems] = useState([]);
 
-  const addresses = [
-    {
-      id: 1,
-      name: 'John Doe',
-      phone: '+91 9876543210',
-      address: '123 Main Street, Apartment 4B',
-      city: 'Mumbai',
-      state: 'Maharashtra',
-      pincode: '400001',
-      isDefault: true,
-    },
-    {
-      id: 2,
-      name: 'John Doe',
-      phone: '+91 9876543210',
-      address: '456 Oak Avenue, Floor 2',
-      city: 'Delhi',
-      state: 'Delhi',
-      pincode: '110001',
-      isDefault: false,
-    },
-  ];
+  useEffect(() => {
+    fetchAddresses();
+  }, []);
 
-  const orderItems = [
-    { name: 'Wireless Headphones', quantity: 2, price: 2999 },
-    { name: 'Smart Watch', quantity: 1, price: 8999 },
-  ];
+  const fetchAddresses = async () => {
+    try {
+      const res = await getMyAddresses();
+      const data = res.data.addresses || [];
+      setAddresses(data);
 
-  const subtotal = orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shipping = 0;
+      const defaultAddr = data.find((a) => a.isDefault);
+      if (defaultAddr) setSelectedAddress(defaultAddr._id);
+      else if (data.length > 0) setSelectedAddress(data[0]._id);
+    } catch (err) {
+      console.error("Address fetch error:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchAddresses();
+    fetchCart();
+  }, []);
+
+  const fetchCart = async () => {
+    try {
+      const res = await getMyCart();
+      setCartItems(res.data?.cart.items || []);
+    } catch (err) {
+      console.error("Cart fetch error:", err);
+    }
+  };
+
+  const subtotal = cartItems.reduce(
+    (sum, item) => sum + item.product.price * item.quantity,
+    0,
+  );
+
+  const shipping = subtotal > 5000 ? 0 : 99;
   const tax = subtotal * 0.18;
   const total = subtotal + shipping + tax;
 
@@ -50,27 +66,30 @@ const CheckoutPage = () => {
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="flex items-center mb-4">
               <MapPinIcon className="w-6 h-6 text-blue-600 mr-2" />
-              <h2 className="text-xl font-bold text-gray-900">Delivery Address</h2>
+              <h2 className="text-xl font-bold text-gray-900">
+                Delivery Address
+              </h2>
             </div>
 
             <div className="space-y-4 mb-4">
               {addresses.map((address) => (
                 <label
-                  key={address.id}
+                  key={address._id}
                   className={`flex items-start p-4 border-2 rounded-lg cursor-pointer ${
-                    selectedAddress === address.id
-                      ? 'border-blue-600 bg-blue-50'
-                      : 'border-gray-200'
+                    selectedAddress === address._id
+                      ? "border-blue-600 bg-blue-50"
+                      : "border-gray-200"
                   }`}
                 >
                   <input
                     type="radio"
                     name="address"
-                    value={address.id}
-                    checked={selectedAddress === address.id}
-                    onChange={(e) => setSelectedAddress(Number(e.target.value))}
+                    value={address._id}
+                    checked={selectedAddress === address._id}
+                    onChange={(e) => setSelectedAddress(e.target.value)}
                     className="mt-1 mr-3"
                   />
+
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="font-semibold">{address.name}</h3>
@@ -84,53 +103,65 @@ const CheckoutPage = () => {
                     <p className="text-gray-600 text-sm">
                       {address.city}, {address.state} - {address.pincode}
                     </p>
-                    <p className="text-gray-600 text-sm mt-1">Phone: {address.phone}</p>
+                    <p className="text-gray-600 text-sm mt-1">
+                      Phone: {address.phone}
+                    </p>
                   </div>
                 </label>
               ))}
             </div>
 
             <Link to="/user/addresses">
-              <Button variant="outline" size="sm">Add New Address</Button>
+              <Button variant="outline" size="sm">
+                Add New Address
+              </Button>
             </Link>
           </div>
 
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="flex items-center mb-4">
               <CreditCardIcon className="w-6 h-6 text-blue-600 mr-2" />
-              <h2 className="text-xl font-bold text-gray-900">Payment Method</h2>
+              <h2 className="text-xl font-bold text-gray-900">
+                Payment Method
+              </h2>
             </div>
 
             <div className="space-y-3">
               <label
                 className={`flex items-center p-4 border-2 rounded-lg cursor-pointer ${
-                  paymentMethod === 'card' ? 'border-blue-600 bg-blue-50' : 'border-gray-200'
+                  paymentMethod === "card"
+                    ? "border-blue-600 bg-blue-50"
+                    : "border-gray-200"
                 }`}
               >
                 <input
                   type="radio"
                   name="payment"
                   value="card"
-                  checked={paymentMethod === 'card'}
+                  checked={paymentMethod === "card"}
                   onChange={(e) => setPaymentMethod(e.target.value)}
                   className="mr-3"
                 />
                 <div>
                   <h3 className="font-semibold">Credit/Debit Card</h3>
-                  <p className="text-sm text-gray-600">Pay securely with your card</p>
+                  <p className="text-sm text-gray-600">
+                    Pay securely with your card
+                  </p>
                 </div>
               </label>
 
               <label
                 className={`flex items-center p-4 border-2 rounded-lg cursor-pointer ${
-                  paymentMethod === 'upi' ? 'border-blue-600 bg-blue-50' : 'border-gray-200'
+                  paymentMethod === "upi"
+                    ? "border-blue-600 bg-blue-50"
+                    : "border-gray-200"
                 }`}
               >
                 <input
                   type="radio"
                   name="payment"
                   value="upi"
-                  checked={paymentMethod === 'upi'}
+                  checked={paymentMethod === "upi"}
                   onChange={(e) => setPaymentMethod(e.target.value)}
                   className="mr-3"
                 />
@@ -142,14 +173,16 @@ const CheckoutPage = () => {
 
               <label
                 className={`flex items-center p-4 border-2 rounded-lg cursor-pointer ${
-                  paymentMethod === 'cod' ? 'border-blue-600 bg-blue-50' : 'border-gray-200'
+                  paymentMethod === "cod"
+                    ? "border-blue-600 bg-blue-50"
+                    : "border-gray-200"
                 }`}
               >
                 <input
                   type="radio"
                   name="payment"
                   value="cod"
-                  checked={paymentMethod === 'cod'}
+                  checked={paymentMethod === "cod"}
                   onChange={(e) => setPaymentMethod(e.target.value)}
                   className="mr-3"
                 />
@@ -160,7 +193,7 @@ const CheckoutPage = () => {
               </label>
             </div>
 
-            {paymentMethod === 'card' && (
+            {paymentMethod === "card" && (
               <div className="mt-6 space-y-4">
                 <Input label="Card Number" placeholder="1234 5678 9012 3456" />
                 <div className="grid grid-cols-2 gap-4">
@@ -181,13 +214,15 @@ const CheckoutPage = () => {
             </div>
 
             <div className="space-y-3 mb-4">
-              {orderItems.map((item, index) => (
+              {cartItems.map((item, index) => (
                 <div key={index} className="flex justify-between text-sm">
                   <div>
-                    <p className="font-medium">{item.name}</p>
+                    <p className="font-medium">{item.product.name}</p>
                     <p className="text-gray-500">Qty: {item.quantity}</p>
                   </div>
-                  <span className="font-medium">₹{(item.price * item.quantity).toLocaleString()}</span>
+                  <span className="font-medium">
+                    ₹{(item.product.price * item.quantity).toLocaleString()}
+                  </span>
                 </div>
               ))}
             </div>
@@ -199,12 +234,17 @@ const CheckoutPage = () => {
               </div>
               <div className="flex justify-between text-gray-600">
                 <span>Shipping</span>
-                <span className="text-green-600">Free</span>
+                 <span>{shipping === 0 ? 'Free' : `₹${shipping}`}</span>
               </div>
               <div className="flex justify-between text-gray-600">
-                <span>Tax (GST)</span>
+                <span>Tax (GST) 18%</span>
                 <span>₹{tax.toFixed(2)}</span>
               </div>
+              {subtotal < 5000 && (
+                <div className="text-sm text-green-600">
+                  Add ₹{(5000 - subtotal).toLocaleString()} more for free shipping!
+                </div>
+              )}
             </div>
 
             <div className="border-t pt-4 mb-6">
