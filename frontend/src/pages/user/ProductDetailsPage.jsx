@@ -10,6 +10,11 @@ import Button from "../../components/common/Button";
 import { getProductById } from "../../services/product.service";
 import { addToCart } from "../../services/cart.service";
 import { toast } from "react-toastify";
+import {
+  addToWishlist,
+  removeFromWishlist,
+  isInWishlist,
+} from "../../utils/wishlist.utils";
 
 const ProductDetailsPage = () => {
   const { id } = useParams();
@@ -34,6 +39,12 @@ const ProductDetailsPage = () => {
     if (id) fetchProduct();
   }, [id]);
 
+  useEffect(() => {
+    if (product) {
+      setIsWishlisted(isInWishlist(product._id));
+    }
+  }, [product]);
+
   if (loading) return <div className="p-10">Loading...</div>;
   if (!product) return <div className="p-10">Product not found</div>;
 
@@ -44,28 +55,41 @@ const ProductDetailsPage = () => {
   const addInCart = async (product) => {
     try {
       await addToCart(product._id, quantity);
-  
-      setCartItems(prev => {
-        const exists = prev.find(item => item.product._id === product._id);
-  
+
+      setCartItems((prev) => {
+        const exists = prev.find((item) => item.product._id === product._id);
+
         if (exists) {
-          return prev.map(item =>
+          return prev.map((item) =>
             item.product._id === product._id
               ? { ...item, quantity: item.quantity + quantity }
-              : item
+              : item,
           );
         }
-  
+
         return [...prev, { product, quantity }];
       });
-  
+
       setQuantity(1);
       toast.success(`${product.name} added to cart`);
-  
+
+      window.dispatchEvent(new Event("cartUpdated"));
     } catch (error) {
       toast.error("Failed to add item to cart");
     }
-  };  
+  };
+
+  const toggleWishlist = () => {
+    if (isWishlisted) {
+      removeFromWishlist(product._id);
+      setIsWishlisted(false);
+    } else {
+      addToWishlist(product);
+      setIsWishlisted(true);
+    }
+
+    window.dispatchEvent(new Event("wishlistUpdated"));
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -155,15 +179,15 @@ const ProductDetailsPage = () => {
           </div>
 
           <div className="flex space-x-4">
-            <Button onClick={() => addInCart(product)} className="flex-1 flex items-center justify-center">
+            <Button
+              onClick={() => addInCart(product)}
+              className="flex-1 flex items-center justify-center"
+            >
               <ShoppingCartIcon className="w-5 h-5 mr-2" />
               Add to Cart
             </Button>
 
-            <Button
-              variant="outline"
-              onClick={() => setIsWishlisted(!isWishlisted)}
-            >
+            <Button variant="outline" onClick={toggleWishlist}>
               {isWishlisted ? (
                 <HeartIcon className="w-5 h-5 text-red-500" />
               ) : (

@@ -102,7 +102,7 @@ const HomePage = () => {
                   <div className="flex items-center mb-2">
                     <span className="text-yellow-400">★</span>
                     <span className="ml-1 text-sm text-gray-600">
-                      {product.averageRating} ({product.numReviews})
+                      {product.averageRating.toFixed(1)} ({product.numReviews})
 
                     </span>
                   </div>
