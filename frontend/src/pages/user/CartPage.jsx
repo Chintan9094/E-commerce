@@ -37,6 +37,7 @@ const CartPage = () => {
             : item
         )
       );
+      window.dispatchEvent(new Event("cartUpdated"));
     } catch (error) {
       console.error("Quantity update failed:", error);
     }
@@ -49,6 +50,7 @@ const CartPage = () => {
       setCartItems(prev =>
         prev.filter(item => item.product._id !== productId)
       );
+      window.dispatchEvent(new Event("cartUpdated"));
     } catch (error) {
       console.error("Remove item failed:", error);
     }
