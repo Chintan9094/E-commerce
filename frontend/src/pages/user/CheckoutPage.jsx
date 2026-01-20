@@ -1,23 +1,28 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import {
-  MapPinIcon,
-  CreditCardIcon,
-  TruckIcon,
-} from "@heroicons/react/24/outline";
-import Input from "../../components/common/Input";
+import { Link, useNavigate } from "react-router-dom";
+import { MapPinIcon, TruckIcon } from "@heroicons/react/24/outline";
 import Button from "../../components/common/Button";
 import { getMyAddresses } from "../../services/address.service";
 import { getMyCart } from "../../services/cart.service";
+import { toast } from "react-toastify";
+import {
+  createRazorpayOrder,
+  verifyRazorpayPayment,
+} from "../../services/payment.service";
+import { placeOrder } from "../../services/order.service";
+
 
 const CheckoutPage = () => {
-  const [paymentMethod, setPaymentMethod] = useState("card");
+  const navigate = useNavigate();
+
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [addresses, setAddresses] = useState([]);
   const [cartItems, setCartItems] = useState([]);
+  const [paymentType, setPaymentType] = useState("online"); 
 
   useEffect(() => {
     fetchAddresses();
+    fetchCart();
   }, []);
 
   const fetchAddresses = async () => {
@@ -34,11 +39,6 @@ const CheckoutPage = () => {
     }
   };
 
-  useEffect(() => {
-    fetchAddresses();
-    fetchCart();
-  }, []);
-
   const fetchCart = async () => {
     try {
       const res = await getMyCart();
@@ -50,32 +50,96 @@ const CheckoutPage = () => {
 
   const subtotal = cartItems.reduce(
     (sum, item) => sum + item.product.price * item.quantity,
-    0,
+    0
   );
 
   const shipping = subtotal > 5000 ? 0 : 99;
   const tax = subtotal * 0.18;
   const total = subtotal + shipping + tax;
 
+const handlePlaceOrder = async () => {
+  if (!selectedAddress) {
+    toast.error("Please select address");
+    return;
+  }
+
+  try {
+    const orderRes = await placeOrder();
+    const order = orderRes.data.order;
+    const orderId = order._id;
+
+    if (paymentType === "cod") {
+      toast.success("Order placed successfully");
+      navigate("/user/order-success");
+      return;
+    }
+
+    const paymentRes = await createRazorpayOrder(orderId);
+    const paymentData = paymentRes.data;
+
+    const options = {
+      key: paymentData.key,
+      amount: paymentData.amount,
+      currency: paymentData.currency,
+      name: "My Store",
+      description: "Order Payment",
+      order_id: paymentData.razorpayOrderId,
+
+      method: {
+        upi: true,
+        card: true,
+        netbanking: true,
+        wallet: true,
+      },
+
+      handler: async function (response) {
+        try {
+          const verifyRes = await verifyRazorpayPayment({
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+            orderId,
+          });
+
+          if (verifyRes.data.success) {
+            toast.success("Payment successful");
+            navigate("/user/order-success");
+          } else {
+            toast.error("Payment verification failed");
+          }
+        } catch {
+          toast.error("Verification error");
+        }
+      },
+
+      theme: { color: "#2563eb" },
+    };
+
+    const rzp = new window.Razorpay(options);
+    rzp.open();
+  } catch (err) {
+    console.error(err);
+    toast.error("Order failed");
+  }
+};
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Checkout</h1>
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-8">Checkout</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="bg-white p-6 rounded-lg shadow">
             <div className="flex items-center mb-4">
               <MapPinIcon className="w-6 h-6 text-blue-600 mr-2" />
-              <h2 className="text-xl font-bold text-gray-900">
-                Delivery Address
-              </h2>
+              <h2 className="text-xl font-bold">Delivery Address</h2>
             </div>
 
-            <div className="space-y-4 mb-4">
+            <div className="space-y-4">
               {addresses.map((address) => (
                 <label
                   key={address._id}
-                  className={`flex items-start p-4 border-2 rounded-lg cursor-pointer ${
+                  className={`flex p-4 border-2 rounded-lg cursor-pointer ${
                     selectedAddress === address._id
                       ? "border-blue-600 bg-blue-50"
                       : "border-gray-200"
@@ -83,183 +147,91 @@ const CheckoutPage = () => {
                 >
                   <input
                     type="radio"
-                    name="address"
-                    value={address._id}
                     checked={selectedAddress === address._id}
-                    onChange={(e) => setSelectedAddress(e.target.value)}
+                    onChange={() => setSelectedAddress(address._id)}
                     className="mt-1 mr-3"
                   />
-
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-semibold">{address.name}</h3>
-                      {address.isDefault && (
-                        <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">
-                          Default
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-gray-600 text-sm">{address.address}</p>
-                    <p className="text-gray-600 text-sm">
-                      {address.city}, {address.state} - {address.pincode}
-                    </p>
-                    <p className="text-gray-600 text-sm mt-1">
-                      Phone: {address.phone}
+                  <div>
+                    <h3 className="font-semibold">{address.name}</h3>
+                    <p className="text-sm text-gray-600">{address.address}</p>
+                    <p className="text-sm text-gray-600">
+                      {address.city}, {address.state}
                     </p>
                   </div>
                 </label>
+                
               ))}
-            </div>
+              <div className="mt-4">
+  <Link to="/user/addresses">
+    <Button variant="outline" size="sm">
+      + Add New Address
+    </Button>
+  </Link>
+</div>
 
-            <Link to="/user/addresses">
-              <Button variant="outline" size="sm">
-                Add New Address
-              </Button>
-            </Link>
+            </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center mb-4">
-              <CreditCardIcon className="w-6 h-6 text-blue-600 mr-2" />
-              <h2 className="text-xl font-bold text-gray-900">
-                Payment Method
-              </h2>
-            </div>
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-xl font-bold mb-4">Payment Option</h2>
 
-            <div className="space-y-3">
-              <label
-                className={`flex items-center p-4 border-2 rounded-lg cursor-pointer ${
-                  paymentMethod === "card"
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div
+                onClick={() => setPaymentType("online")}
+                className={`p-5 border-2 rounded-lg cursor-pointer text-center ${
+                  paymentType === "online"
                     ? "border-blue-600 bg-blue-50"
                     : "border-gray-200"
                 }`}
               >
-                <input
-                  type="radio"
-                  name="payment"
-                  value="card"
-                  checked={paymentMethod === "card"}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                  className="mr-3"
-                />
-                <div>
-                  <h3 className="font-semibold">Credit/Debit Card</h3>
-                  <p className="text-sm text-gray-600">
-                    Pay securely with your card
-                  </p>
-                </div>
-              </label>
-
-              <label
-                className={`flex items-center p-4 border-2 rounded-lg cursor-pointer ${
-                  paymentMethod === "upi"
-                    ? "border-blue-600 bg-blue-50"
-                    : "border-gray-200"
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="payment"
-                  value="upi"
-                  checked={paymentMethod === "upi"}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                  className="mr-3"
-                />
-                <div>
-                  <h3 className="font-semibold">UPI</h3>
-                  <p className="text-sm text-gray-600">Pay using UPI apps</p>
-                </div>
-              </label>
-
-              <label
-                className={`flex items-center p-4 border-2 rounded-lg cursor-pointer ${
-                  paymentMethod === "cod"
-                    ? "border-blue-600 bg-blue-50"
-                    : "border-gray-200"
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="payment"
-                  value="cod"
-                  checked={paymentMethod === "cod"}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                  className="mr-3"
-                />
-                <div>
-                  <h3 className="font-semibold">Cash on Delivery</h3>
-                  <p className="text-sm text-gray-600">Pay when you receive</p>
-                </div>
-              </label>
-            </div>
-
-            {paymentMethod === "card" && (
-              <div className="mt-6 space-y-4">
-                <Input label="Card Number" placeholder="1234 5678 9012 3456" />
-                <div className="grid grid-cols-2 gap-4">
-                  <Input label="Expiry Date" placeholder="MM/YY" />
-                  <Input label="CVV" placeholder="123" type="password" />
-                </div>
-                <Input label="Cardholder Name" placeholder="John Doe" />
+                Online Payment
+                <p className="text-sm text-gray-500 mt-1">
+                  Card / Netbanking / Wallet via Razorpay
+                </p>
               </div>
-            )}
+
+              <div
+                onClick={() => setPaymentType("cod")}
+                className={`p-5 border-2 rounded-lg cursor-pointer text-center ${
+                  paymentType === "cod"
+                    ? "border-green-600 bg-green-50"
+                    : "border-gray-200"
+                }`}
+              >
+                Cash on Delivery
+                <p className="text-sm text-gray-500 mt-1">
+                  Pay when order arrives
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="lg:col-span-1">
-          <div className="bg-white rounded-lg shadow-md p-6 sticky top-24">
-            <div className="flex items-center mb-4">
-              <TruckIcon className="w-6 h-6 text-blue-600 mr-2" />
-              <h2 className="text-xl font-bold text-gray-900">Order Summary</h2>
-            </div>
-
-            <div className="space-y-3 mb-4">
-              {cartItems.map((item, index) => (
-                <div key={index} className="flex justify-between text-sm">
-                  <div>
-                    <p className="font-medium">{item.product.name}</p>
-                    <p className="text-gray-500">Qty: {item.quantity}</p>
-                  </div>
-                  <span className="font-medium">
-                    ₹{(item.product.price * item.quantity).toLocaleString()}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            <div className="border-t pt-4 space-y-3 mb-4">
-              <div className="flex justify-between text-gray-600">
-                <span>Subtotal</span>
-                <span>₹{subtotal.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between text-gray-600">
-                <span>Shipping</span>
-                 <span>{shipping === 0 ? 'Free' : `₹${shipping}`}</span>
-              </div>
-              <div className="flex justify-between text-gray-600">
-                <span>Tax (GST) 18%</span>
-                <span>₹{tax.toFixed(2)}</span>
-              </div>
-              {subtotal < 5000 && (
-                <div className="text-sm text-green-600">
-                  Add ₹{(5000 - subtotal).toLocaleString()} more for free shipping!
-                </div>
-              )}
-            </div>
-
-            <div className="border-t pt-4 mb-6">
-              <div className="flex justify-between text-xl font-bold text-gray-900">
-                <span>Total</span>
-                <span>₹{total.toFixed(2)}</span>
-              </div>
-            </div>
-
-            <Link to="/user/order-success" className="block">
-              <Button variant="primary" size="lg" className="w-full">
-                Place Order
-              </Button>
-            </Link>
+        <div className="bg-white p-6 rounded-lg shadow sticky top-24">
+          <div className="flex items-center mb-4">
+            <TruckIcon className="w-6 h-6 text-blue-600 mr-2" />
+            <h2 className="text-xl font-bold">Order Summary</h2>
           </div>
+
+          <div className="space-y-2 mb-4">
+            {cartItems.map((item, i) => (
+              <div key={i} className="flex justify-between text-sm">
+                <span>{item.product.name}</span>
+                <span>₹{item.product.price * item.quantity}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="border-t pt-4 space-y-2">
+            <div className="flex justify-between">
+              <span>Total</span>
+              <span className="font-bold">₹{total.toFixed(2)}</span>
+            </div>
+          </div>
+
+          <Button onClick={handlePlaceOrder} className="w-full mt-6">
+            {paymentType === "cod" ? "Place Order" : "Pay & Place Order"}
+          </Button>
         </div>
       </div>
     </div>
