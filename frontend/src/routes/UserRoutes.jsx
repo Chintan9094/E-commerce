@@ -40,6 +40,7 @@ const UserRoutes = () => {
         <Route path="profile" element={<ProfilePage />} />
         <Route path="addresses" element={<AddressManagementPage />} />
         <Route path="wishlist" element={<WishlistPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
   );

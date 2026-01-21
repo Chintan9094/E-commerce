@@ -165,7 +165,7 @@ const CheckoutPage = () => {
                 </label>
               ))}
               <div className="mt-4">
-                <Link to="/user/addresses">
+                <Link to="/user/addresses" state={{ from: "checkout" }}>
                   <Button variant="outline" size="sm">
                     + Add New Address
                   </Button>

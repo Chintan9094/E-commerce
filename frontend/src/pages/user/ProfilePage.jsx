@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { getProfile } from '../../services/auth.service';
 import { updateProfile } from '../../services/auth.service';
 import { toast } from 'react-toastify';
+import { Link } from 'react-router-dom';
 
 const ProfilePage = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -175,28 +176,29 @@ const handleSubmit = async (e) => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-        <a
-          href="/user/orders"
+        <Link
+          to="/user/orders"
           className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow text-center"
         >
           <h3 className="font-semibold text-gray-900 mb-2">My Orders</h3>
           <p className="text-sm text-gray-600">View order history</p>
-        </a>
-        <a
-          href="/user/addresses"
+        </Link>
+        <Link
+          to="/user/addresses"
+          state={{ from: "profile" }}
           className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow text-center"
         >
           <MapPinIcon className="w-8 h-8 text-blue-600 mx-auto mb-2" />
           <h3 className="font-semibold text-gray-900 mb-2">Addresses</h3>
           <p className="text-sm text-gray-600">Manage addresses</p>
-        </a>
-        <a
-          href="/user/wishlist"
+        </Link>
+        <Link
+          to="/user/wishlist"
           className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow text-center"
         >
           <h3 className="font-semibold text-gray-900 mb-2">Wishlist</h3>
           <p className="text-sm text-gray-600">View saved items</p>
-        </a>
+        </Link>
       </div>
     </div>
   );
