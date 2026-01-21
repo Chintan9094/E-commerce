@@ -4,6 +4,8 @@ import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
 import { useAuth } from '../../context/AuthContext';
 import { getProfile } from '../../services/auth.service';
+import { updateProfile } from '../../services/auth.service';
+import { toast } from 'react-toastify';
 
 const ProfilePage = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -20,11 +22,6 @@ const ProfilePage = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setIsEditing(false);
-  };
-
   useEffect(() => {
   const fetchProfile = async () => {
     try {
@@ -38,6 +35,17 @@ const ProfilePage = () => {
   fetchProfile();
 }, []);
 
+const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await updateProfile(formData);
+      setFormData(res.data.user);
+      toast.success("Profile updated successfully");
+      setIsEditing(false);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to update profile");
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

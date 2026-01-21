@@ -11,3 +11,6 @@ export const logoutUser = () =>
 
 export const getProfile = () =>
   api.get("/auth/me");
+
+export const updateProfile = (data) =>
+  api.put("/auth/me", data);
