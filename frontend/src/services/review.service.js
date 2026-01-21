@@ -1,3 +1,5 @@
+import api from "../api/axios";
+
 export const addReview = (id, data) =>
   api.post(`/reviews/${id}`, data);
 

@@ -101,7 +101,7 @@ const ProductDetailsPage = () => {
 
   const handleSubmitReview = async () => {
     if (!ratingInput || !commentInput) {
-      return toast.error("Rating aur comment dono zaroori hai");
+      return toast.error("Rating and comment are required");
     }
 
     try {
