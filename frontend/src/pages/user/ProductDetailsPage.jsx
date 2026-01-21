@@ -15,6 +15,8 @@ import {
   removeFromWishlist,
   isInWishlist,
 } from "../../utils/wishlist.utils";
+import { useSearchParams } from "react-router-dom";
+import { addReview, getReviews } from "../../services/review.service";
 
 const ProductDetailsPage = () => {
   const { id } = useParams();
@@ -23,12 +25,18 @@ const ProductDetailsPage = () => {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [cartItems, setCartItems] = useState([]);
+  const [searchParams] = useSearchParams();
+  const openReview = searchParams.get("review") === "true";
+  const [ratingInput, setRatingInput] = useState("");
+  const [commentInput, setCommentInput] = useState("");
+  const [productReviews, setProductReviews] = useState([]);
 
   useEffect(() => {
     const fetchProduct = async () => {
       try {
         const response = await getProductById(id);
         setProduct(response.data.product);
+        setProductReviews(response.data.product.reviews || []);
       } catch (error) {
         console.error("Error fetching product:", error);
       } finally {
@@ -89,6 +97,29 @@ const ProductDetailsPage = () => {
     }
 
     window.dispatchEvent(new Event("wishlistUpdated"));
+  };
+
+  const handleSubmitReview = async () => {
+    if (!ratingInput || !commentInput) {
+      return toast.error("Rating aur comment dono zaroori hai");
+    }
+
+    try {
+      await addReview(product._id, {
+        rating: ratingInput,
+        comment: commentInput,
+      });
+
+      toast.success("Review submitted!");
+
+      const res = await getReviews(product._id);
+      setProductReviews(res.data.reviews);
+
+      setRatingInput("");
+      setCommentInput("");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to submit review");
+    }
   };
 
   return (
@@ -198,10 +229,55 @@ const ProductDetailsPage = () => {
         </div>
       </div>
 
+      {openReview && (
+        <div className="bg-white p-6 mb-6 rounded-lg shadow">
+          <h3 className="text-lg font-semibold mb-4">Write a Review</h3>
+
+          <div className="flex items-center gap-2 mb-4">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <button
+                key={star}
+                type="button"
+                onClick={() => setRatingInput(star)}
+                className="focus:outline-none"
+              >
+                <StarIcon
+                  className={`w-8 h-8 transition ${
+                    star <= ratingInput
+                      ? "text-yellow-400"
+                      : "text-gray-300 hover:text-yellow-300"
+                  }`}
+                />
+              </button>
+            ))}
+
+            {ratingInput > 0 && (
+              <span className="text-sm text-gray-600 ml-2">
+                {ratingInput} / 5
+              </span>
+            )}
+          </div>
+
+          <textarea
+            value={commentInput}
+            onChange={(e) => setCommentInput(e.target.value)}
+            placeholder="Write your review..."
+            className="w-full border p-2 rounded mb-3"
+          />
+
+          <button
+            onClick={handleSubmitReview}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          >
+            Submit Review
+          </button>
+        </div>
+      )}
+
       <div className="border-t pt-8">
         <h2 className="text-2xl font-bold mb-6">Customer Reviews</h2>
 
-        {reviews.map((review, index) => (
+        {productReviews.map((review, index) => (
           <div key={index} className="border-b pb-6">
             <h4 className="font-semibold">{review.name}</h4>
             <p className="text-gray-600">{review.comment}</p>

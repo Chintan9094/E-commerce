@@ -1,13 +1,14 @@
-import { useParams, Link } from 'react-router-dom';
-import { MapPinIcon, TruckIcon } from '@heroicons/react/24/outline';
-import { useEffect, useState } from 'react';
-import { getOrderById } from '../../services/order.service';
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { MapPinIcon, TruckIcon } from "@heroicons/react/24/outline";
+import { useEffect, useState } from "react";
+import { getOrderById } from "../../services/order.service";
 
 const OrderDetailsPage = () => {
   const { id } = useParams();
   const [order, setOrders] = useState(null);
   const steps = ["pending", "shipped", "delivered", "cancelled"];
   const currentIndex = steps.indexOf(order?.status);
+  const navigate = useNavigate();
 
   const fetchOrder = async () => {
     try {
@@ -24,33 +25,41 @@ const OrderDetailsPage = () => {
 
   if (!order) return <div className="p-10">Loading...</div>;
 
-
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
-      case 'delivered':
-        return 'bg-green-100 text-green-800';
-      case 'shipped':
-        return 'bg-blue-100 text-blue-800';
-      case 'processing':
-        return 'bg-yellow-100 text-yellow-800';
+      case "delivered":
+        return "bg-green-100 text-green-800";
+      case "shipped":
+        return "bg-blue-100 text-blue-800";
+      case "processing":
+        return "bg-yellow-100 text-yellow-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <Link to="/user/orders" className="text-blue-600 hover:text-blue-700 mb-4 inline-block">
+      <Link
+        to="/user/orders"
+        className="text-blue-600 hover:text-blue-700 mb-4 inline-block"
+      >
         ← Back to Orders
       </Link>
 
       <div className="bg-white rounded-lg shadow-md p-6 mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Order #{order._id}</h1>
-            <p className="text-gray-600">Placed on {new Date(order.createdAt).toLocaleDateString("en-IN")}</p>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              Order #{order._id}
+            </h1>
+            <p className="text-gray-600">
+              Placed on {new Date(order.createdAt).toLocaleDateString("en-IN")}
+            </p>
           </div>
-          <span className={`px-4 py-2 rounded-full text-sm font-medium ${getStatusColor(order.status)} mt-4 sm:mt-0 inline-block`}>
+          <span
+            className={`px-4 py-2 rounded-full text-sm font-medium ${getStatusColor(order.status)} mt-4 sm:mt-0 inline-block`}
+          >
             {order.status}
           </span>
         </div>
@@ -61,7 +70,7 @@ const OrderDetailsPage = () => {
           <div className="relative">
             {steps.map((step, index) => {
               const historyItem = order.statusHistory?.find(
-                (s) => s.status === step
+                (s) => s.status === step,
               );
 
               const isCompleted = index <= currentIndex;
@@ -113,23 +122,47 @@ const OrderDetailsPage = () => {
                   "https://via.placeholder.com/100";
 
                 return (
-                  <div key={item._id} className="flex items-center space-x-4 pb-4 border-b last:border-0">
+                  <div
+                    key={item._id}
+                    className="flex items-start gap-4 p-4 border rounded-lg hover:shadow-sm transition bg-gray-50"
+                  >
                     <img
                       src={image}
                       alt={product?.name}
-                      className="w-20 h-20 object-cover rounded-lg"
+                      className="w-24 h-24 object-cover rounded-md border"
                     />
 
                     <div className="flex-1">
-                      <h3 className="font-medium text-gray-900">{product?.name}</h3>
-                      <p className="text-sm text-gray-500">Quantity: {item.quantity}</p>
+                      <h3 className="font-semibold text-gray-900 text-base">
+                        {product?.name}
+                      </h3>
+
+                      <p className="text-sm text-gray-500 mt-1">
+                        Quantity:{" "}
+                        <span className="font-medium text-gray-700">
+                          {item.quantity}
+                        </span>
+                      </p>
+
+                      {order.status === "delivered" && (
+                        <button
+                          onClick={() =>
+                            navigate(`/user/product/${product._id}?review=true`)
+                          }
+                          className="mt-3 px-3 py-1.5 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                        >
+                          Leave Review
+                        </button>
+                      )}
                     </div>
 
-                    <div className="text-right">
-                      <p className="font-semibold text-gray-900">
+                    <div className="text-right min-w-[100px]">
+                      <p className="font-semibold text-gray-900 text-lg">
                         ₹{(product?.price * item.quantity).toLocaleString()}
                       </p>
-                      <p className="text-sm text-gray-500">₹{product?.price} each</p>
+                      <p className="text-xs text-gray-500">
+                        ₹{product?.price} each
+                      </p>
                     </div>
                   </div>
                 );
@@ -145,10 +178,13 @@ const OrderDetailsPage = () => {
               <h2 className="text-lg font-semibold">Delivery Address</h2>
             </div>
             <div className="text-gray-600 text-sm">
-              <p className="font-medium text-gray-900 mb-1">{order.address.name}</p>
+              <p className="font-medium text-gray-900 mb-1">
+                {order.address.name}
+              </p>
               <p>{order.address.address}</p>
               <p>
-                {order.address.city}, {order.address.state} - {order.address.pincode}
+                {order.address.city}, {order.address.state} -{" "}
+                {order.address.pincode}
               </p>
               <p className="mt-2">Phone: {order.address.phone}</p>
             </div>
