@@ -16,8 +16,8 @@ export const placeOrder = async (req, res, next) => {
     }
 
     if (!addressId) {
-  return next(new AppError("Address is required", 400));
-}
+      return next(new AppError("Address is required", 400));
+    }
 
     const address = await Address.findById(addressId);
     if (!address) {
@@ -69,7 +69,6 @@ export const placeOrder = async (req, res, next) => {
   }
 };
 
-
 export const getMyOrders = async (req, res, next) => {
   try {
     const orders = await Order.find({ user: req.user._id })
@@ -104,7 +103,7 @@ export const getOrderById = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-}
+};
 
 export const getAllOrders = async (req, res, next) => {
   try {
@@ -147,9 +146,7 @@ export const updateOrderStatus = async (req, res, next) => {
         date: new Date(),
       });
     }
-
     await order.save();
-
 
     res.json({
       success: true,
