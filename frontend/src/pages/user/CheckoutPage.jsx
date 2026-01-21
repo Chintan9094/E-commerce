@@ -11,14 +11,13 @@ import {
 } from "../../services/payment.service";
 import { placeOrder } from "../../services/order.service";
 
-
 const CheckoutPage = () => {
   const navigate = useNavigate();
 
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [addresses, setAddresses] = useState([]);
   const [cartItems, setCartItems] = useState([]);
-  const [paymentType, setPaymentType] = useState("online"); 
+  const [paymentType, setPaymentType] = useState("online");
 
   useEffect(() => {
     fetchAddresses();
@@ -50,78 +49,82 @@ const CheckoutPage = () => {
 
   const subtotal = cartItems.reduce(
     (sum, item) => sum + item.product.price * item.quantity,
-    0
+    0,
   );
 
   const shipping = subtotal > 5000 ? 0 : 99;
   const tax = subtotal * 0.18;
   const total = subtotal + shipping + tax;
 
-const handlePlaceOrder = async () => {
-  if (!selectedAddress) {
-    toast.error("Please select address");
-    return;
-  }
-
-  try {
-    const orderRes = await placeOrder();
-    const order = orderRes.data.order;
-    const orderId = order._id;
-
-    if (paymentType === "cod") {
-      toast.success("Order placed successfully");
-      navigate("/user/order-success");
+  const handlePlaceOrder = async () => {
+    if (!selectedAddress) {
+      toast.error("Please select address");
       return;
     }
 
-    const paymentRes = await createRazorpayOrder(orderId);
-    const paymentData = paymentRes.data;
+    try {
+      const orderRes = await placeOrder({ addressId: selectedAddress });
+      const order = orderRes.data.order;
+      const orderId = order._id;
 
-    const options = {
-      key: paymentData.key,
-      amount: paymentData.amount,
-      currency: paymentData.currency,
-      name: "My Store",
-      description: "Order Payment",
-      order_id: paymentData.razorpayOrderId,
+    if (paymentType === "cod") {
+      toast.success("Order placed successfully");
+      navigate("/user/order-success", {
+        state: { orderId },
+      });
+      return;
+    }
 
-      method: {
-        upi: true,
-        card: true,
-        netbanking: true,
-        wallet: true,
-      },
+      const paymentRes = await createRazorpayOrder(orderId);
+      const paymentData = paymentRes.data;
 
-      handler: async function (response) {
-        try {
-          const verifyRes = await verifyRazorpayPayment({
-            razorpay_order_id: response.razorpay_order_id,
-            razorpay_payment_id: response.razorpay_payment_id,
-            razorpay_signature: response.razorpay_signature,
-            orderId,
-          });
+      const options = {
+        key: paymentData.key,
+        amount: paymentData.amount,
+        currency: paymentData.currency,
+        name: "My Store",
+        description: "Order Payment",
+        order_id: paymentData.razorpayOrderId,
 
-          if (verifyRes.data.success) {
-            toast.success("Payment successful");
-            navigate("/user/order-success");
-          } else {
-            toast.error("Payment verification failed");
+        method: {
+          upi: true,
+          card: true,
+          netbanking: true,
+          wallet: true,
+        },
+
+        handler: async function (response) {
+          try {
+            const verifyRes = await verifyRazorpayPayment({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              orderId,
+            });
+
+            if (verifyRes.data.success) {
+              toast.success("Payment successful");
+              navigate("/user/order-success",{
+                state: { orderId }
+              });
+            } else {
+              toast.error("Payment verification failed");
+            }
+          } catch {
+            toast.error("Verification error");
           }
-        } catch {
-          toast.error("Verification error");
-        }
-      },
+        },
 
-      theme: { color: "#2563eb" },
-    };
+        theme: { color: "#2563eb" },
+      };
 
-    const rzp = new window.Razorpay(options);
-    rzp.open();
-  } catch (err) {
-    console.error(err);
-    toast.error("Order failed");
-  }
-};
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (err) {
+      console.error(err);
+      toast.error("Order failed");
+    }
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -159,16 +162,14 @@ const handlePlaceOrder = async () => {
                     </p>
                   </div>
                 </label>
-                
               ))}
               <div className="mt-4">
-  <Link to="/user/addresses">
-    <Button variant="outline" size="sm">
-      + Add New Address
-    </Button>
-  </Link>
-</div>
-
+                <Link to="/user/addresses">
+                  <Button variant="outline" size="sm">
+                    + Add New Address
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
 

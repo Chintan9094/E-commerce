@@ -21,6 +21,18 @@ const orderSchema = new mongoose.Schema(
                 }
             }
         ],
+        address: {
+            name: String,
+            phone: String,
+            address: String,
+            city: String,
+            state: String,
+            pincode: String,
+        },
+
+        subtotal: Number,
+        shipping: Number,
+        tax: Number,
 
         totalAmount: {
             type: Number,
@@ -29,9 +41,15 @@ const orderSchema = new mongoose.Schema(
 
         status: {
             type: String,
-            enum: ["pending", "shipped", "delivered"],
+            enum: ["pending", "shipped", "delivered", "cancelled"],
             default: "pending"
-        }
+        },
+        statusHistory: [
+    {
+      status: String,
+      date: { type: Date, default: Date.now },
+    },
+  ],
     },
     { timestamps: true }
 );
