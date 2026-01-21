@@ -10,12 +10,15 @@ const RegisterPage = () => {
   const navigate = useNavigate();
   const { setUser } = useAuth();
 
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    role: "user", 
-  });
+const [formData, setFormData] = useState({
+  name: "",
+  email: "",
+  password: "",
+  phone: "",
+  dob: "",
+  gender: "",
+  role: "user",
+});
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -62,10 +65,11 @@ const RegisterPage = () => {
         </div>
 
         <form
-          className="mt-8 space-y-6 bg-white p-8 rounded-lg shadow-md"
+          className="mt-8 bg-white p-8 rounded-lg shadow-md w-full max-w-3xl mx-auto"
           onSubmit={handleSubmit}
         >
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
             <Input
               label="Full Name"
               name="name"
@@ -96,7 +100,43 @@ const RegisterPage = () => {
               required
             />
 
-            {/* 🔥 ROLE SELECTION */}
+            <Input
+              label="Phone Number"
+              name="phone"
+              type="tel"
+              value={formData.phone}
+              onChange={handleChange}
+              placeholder="Enter phone number"
+              required
+            />
+
+            <Input
+              label="Date of Birth"
+              name="dob"
+              type="date"
+              value={formData.dob}
+              onChange={handleChange}
+              required
+            />
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Gender
+              </label>
+              <select
+                name="gender"
+                value={formData.gender}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              >
+                <option value="">Select gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Register as
@@ -112,14 +152,17 @@ const RegisterPage = () => {
                 <option value="seller">Seller</option>
               </select>
             </div>
-          </div>
 
-          <div>
-            <Button type="submit" variant="primary" size="lg" className="w-full">
-              Create Account
-            </Button>
+            {/* Button full width */}
+            <div className="md:col-span-2">
+              <Button type="submit" variant="primary" size="lg" className="w-full">
+                Create Account
+              </Button>
+            </div>
+
           </div>
         </form>
+
       </div>
     </div>
   );

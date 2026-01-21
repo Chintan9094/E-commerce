@@ -11,9 +11,9 @@ const ProfilePage = () => {
   const [formData, setFormData] = useState({
     name: user?.name || "",
     email: user?.email || "",
-    // phone: user?.phone || "",
-    // dob: user?.dob || "",
-    // gender: user?.gender || "",
+    phone: user?.phone || "",
+    dob: user?.dob || "",
+    gender: user?.gender || "",
   });
 
   const handleChange = (e) => {
@@ -98,7 +98,7 @@ const ProfilePage = () => {
               )}
             </div>
 
-            {/* <div>
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 <PhoneIcon className="w-4 h-4 inline mr-1" />
                 Phone Number
@@ -150,7 +150,7 @@ const ProfilePage = () => {
               ) : (
                 <p className="text-gray-900 py-2 capitalize">{formData.gender}</p>
               )}
-            </div> */}
+            </div>
           </div>
 
           {isEditing && (

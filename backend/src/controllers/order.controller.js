@@ -131,14 +131,25 @@ export const updateOrderStatus = async (req, res, next) => {
       return next(new AppError("Order not found", 404));
     }
 
+    if (!order.statusHistory) {
+      order.statusHistory = [];
+    }
+
     order.status = status;
 
-    order.statusHistory.push({
-      status,
-      date: new Date()
-    });
+    const exists = order.statusHistory.find(
+      s => s.status.toLowerCase() === status.toLowerCase()
+    );
+
+    if (!exists) {
+      order.statusHistory.push({
+        status,
+        date: new Date(),
+      });
+    }
 
     await order.save();
+
 
     res.json({
       success: true,

@@ -4,41 +4,49 @@ import { generateToken } from "../utils/jwt.js";
 import { AppError } from "../utils/AppError.js";
 
 export const registerUser = async (req, res, next) => {
-    try {
-        const { name, email, password, role } = req.body;
+    console.log("next is:", typeof next);
+  try {
+    const { name, email, password, role, phone, dob, gender } = req.body;
 
-        if(!name || !email || !password){
-            return next(new AppError("All fields required",400));
-        }   
-
-        const exist = await User.findOne({email});
-
-        if(exist){
-            return next(new AppError("Email already exists",400));
-        }
-
-        const user = await User.create({ name, email, password, role });
-
-        const token = generateToken({ id: user._id });
-        
-        res.cookie("accessToken", token, {
-            httpOnly: true,
-            sameSite: "none",
-            secure: true,
-            path: "/",
-            maxAge: 7 * 24 * 60 * 60 * 1000
-        });
-
-        res.json({
-            success: true,
-            message: "User registered!",
-            user,
-            token
-        });
-        
-    } catch (error) {
-        next(error);
+    if (!name || !email || !password || !phone || !dob || !gender) {
+      return next(new AppError("All fields required", 400));
     }
+
+    const exist = await User.findOne({ email });
+    if (exist) {
+      return next(new AppError("Email already exists", 400));
+    }
+
+    const user = await User.create({
+      name,
+      email,
+      password,
+      role,
+      phone,
+      dob,
+      gender,
+    });
+
+    const token = generateToken({ id: user._id });
+
+    res.cookie("accessToken", token, {
+      httpOnly: true,
+      sameSite: "none",
+      secure: true,
+      path: "/",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    res.json({
+      success: true,
+      message: "User registered!",
+      user,
+      token,
+    });
+  } catch (error) {
+      console.log("REGISTER ERROR 👉", error);
+    next(error);
+  }
 };
 
 export const loginUser = async (req, res, next) => {
@@ -83,38 +91,6 @@ export const loginUser = async (req, res, next) => {
     }
 };
 
-// export const refreshAccessToken = async (req, res, next) => {
-//   try {
-//     const token = req.cookies.refreshToken;
-
-//     if (!token) return next(new AppError("Refresh token missing", 401));
-
-//     const decode = jwt.verify(token, process.env.REFRESH_SECRET);
-
-//     const newAccessToken = generateToken({
-//       id: decode.id,
-//       role: decode.role,
-//     });
-
-//     res.cookie("accessToken", newAccessToken, {
-//       httpOnly: true,
-//       secure: false,
-//       sameSite: "lax",
-//       path: "/",
-//       maxAge: 15 * 60 * 1000, 
-//     });
-
-//     res.json({
-//       success: true,
-//       accessToken: newAccessToken,
-//     });
-
-//   } catch (error) {
-//     return next(new AppError("Invalid or expired refresh token", 401));
-//   }
-// };
-
-
 export const logoutUser = (req, res) => {
   res.clearCookie("accessToken", {
     httpOnly: true,
@@ -136,21 +112,24 @@ export const getMyProfile = (req, res) => {
 };
 
 export const updateProfile = async (req, res, next) => {
-    try {
-        const { name, email } = req.body;
-        const user = req.user;
+  try {
+    const { name, email, phone, dob, gender } = req.body;
+    const user = req.user;
 
-        if (name) user.name = name;
-        if (email) user.email = email;
+    if (name) user.name = name;
+    if (email) user.email = email;
+    if (phone) user.phone = phone;
+    if (dob) user.dob = dob;
+    if (gender) user.gender = gender;
 
-        await user.save();
+    await user.save();
 
-        res.json({
-            success: true,
-            message: "Profile updated successfully",
-            user
-        });
-    } catch (error) {
-        next(error);
-    }
+    res.json({
+      success: true,
+      message: "Profile updated successfully",
+      user,
+    });
+  } catch (error) {
+    next(error);
+  }
 };

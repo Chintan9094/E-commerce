@@ -45,13 +45,23 @@ const orderSchema = new mongoose.Schema(
             default: "pending"
         },
         statusHistory: [
-    {
-      status: String,
-      date: { type: Date, default: Date.now },
-    },
-  ],
+            {
+            status: String,
+            date: { type: Date, default: Date.now },
+            },
+        ],
     },
     { timestamps: true }
 );
+
+orderSchema.pre("save", function () {
+  if (this.isNew && this.statusHistory.length === 0) {
+    this.statusHistory.push({
+      status: "pending",
+      date: new Date(),
+    });
+  }
+});
+
 
 export const Order = mongoose.model("Order", orderSchema);

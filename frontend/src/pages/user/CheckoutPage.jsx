@@ -55,6 +55,7 @@ const CheckoutPage = () => {
   const shipping = subtotal > 5000 ? 0 : 99;
   const tax = subtotal * 0.18;
   const total = subtotal + shipping + tax;
+  console.log(tax)
 
   const handlePlaceOrder = async () => {
     if (!selectedAddress) {
@@ -82,7 +83,7 @@ const CheckoutPage = () => {
         key: paymentData.key,
         amount: paymentData.amount,
         currency: paymentData.currency,
-        name: "My Store",
+        name: "ShopHub",
         description: "Order Payment",
         order_id: paymentData.razorpayOrderId,
 
@@ -220,10 +221,19 @@ const CheckoutPage = () => {
                 <span>{item.product.name}</span>
                 <span>₹{item.product.price * item.quantity}</span>
               </div>
+
             ))}
           </div>
 
           <div className="border-t pt-4 space-y-2">
+              <div className="flex justify-between text-gray-600">
+                <span>Shipping</span>
+                <span className="text-green-600">Free</span>
+              </div>
+              <div className="flex justify-between text-gray-600">
+                <span>Tax (GST) 18%</span>
+                <span>₹{tax}</span>
+              </div>
             <div className="flex justify-between">
               <span>Total</span>
               <span className="font-bold">₹{total.toFixed(2)}</span>

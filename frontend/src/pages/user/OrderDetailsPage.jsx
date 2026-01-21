@@ -7,13 +7,12 @@ const OrderDetailsPage = () => {
   const { id } = useParams();
   const [order, setOrders] = useState(null);
   const steps = ["pending", "shipped", "delivered", "cancelled"];
-  const currentIndex = steps.indexOf(order.status);
+  const currentIndex = steps.indexOf(order?.status);
 
   const fetchOrder = async () => {
     try {
       const res = await getOrderById(id);
       setOrders(res.data.order);
-      console.log("Fetched order:----->", res.data.order);
     } catch (error) {
       console.error("Error fetching order:", error);
     }
@@ -171,7 +170,7 @@ const OrderDetailsPage = () => {
               </div>
               <div className="flex justify-between text-gray-600">
                 <span>Tax (GST)</span>
-                <span>₹{order.tax}</span>
+                <span>₹{order.tax} 18%</span>
               </div>
               <div className="border-t pt-2 mt-2">
                 <div className="flex justify-between text-lg font-bold text-gray-900">
