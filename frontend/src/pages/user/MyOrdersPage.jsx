@@ -106,6 +106,14 @@ const MyOrdersPage = () => {
                           <p className="text-xs text-gray-500">
                             Qty: {item.quantity}
                           </p>
+
+                          {order.status === "delivered" && (
+                            <Link to={`/user/product/${item.product?._id}?review=true`}>
+                              <button className="mt-2 text-xs px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                                Leave Review
+                              </button>
+                            </Link>
+                          )}
                         </div>
                       </div>
                     </div>

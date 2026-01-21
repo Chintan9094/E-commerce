@@ -128,7 +128,7 @@ const ProfilePage = () => {
                   onChange={handleChange}
                 />
               ) : (
-                <p className="text-gray-900 py-2">{formData.dob}</p>
+                <p className="text-gray-900 py-2">{new Date(formData.dob).toLocaleDateString("en-IN")}</p>
               )}
             </div>
 
