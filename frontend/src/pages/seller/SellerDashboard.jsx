@@ -8,8 +8,10 @@ import {
   EyeIcon,
 } from '@heroicons/react/24/outline';
 import Button from '../../components/common/Button';
+import { useAuth } from "../../context/AuthContext";
 
 const SellerDashboard = () => {
+  const { user } = useAuth();
   const stats = [
     {
       name: 'Total Products',
@@ -59,14 +61,40 @@ const SellerDashboard = () => {
 
   return (
     <div>
+        {!user?.sellerProfileCompleted && (
+          <div className="mb-6 bg-yellow-50 border border-yellow-300 p-4 rounded-lg flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold text-yellow-800">
+                ⚠️ Complete your seller profile
+              </h3>
+              <p className="text-sm text-yellow-700">
+                Until you complete your details, you won’t be able to sell products.
+              </p>
+            </div>
+
+            <Link to="/seller/profile">
+              <Button variant="primary">Complete Now</Button>
+            </Link>
+          </div>
+        )}
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <Link to="/seller/products/add">
-          <Button variant="primary">
-            <PlusIcon className="w-5 h-5 mr-2 inline" />
-            Add Product
-          </Button>
-        </Link>
+          {user?.sellerProfileCompleted ? (
+            <Link to="/seller/products/add">
+              <Button variant="primary">
+                <PlusIcon className="w-5 h-5 mr-2 inline" />
+                Add Product
+              </Button>
+            </Link>
+          ) : (
+            <Button
+              disabled
+              className="opacity-50 cursor-not-allowed"
+              onClick={() => toast.error("Complete seller profile to add products")}
+            >
+              🔒 Complete profile to Add Products
+            </Button>
+          )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

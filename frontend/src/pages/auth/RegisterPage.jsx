@@ -137,7 +137,7 @@ const [formData, setFormData] = useState({
               </select>
             </div>
 
-            <div>
+            <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Register as
               </label>
@@ -153,7 +153,6 @@ const [formData, setFormData] = useState({
               </select>
             </div>
 
-            {/* Button full width */}
             <div className="md:col-span-2">
               <Button type="submit" variant="primary" size="lg" className="w-full">
                 Create Account

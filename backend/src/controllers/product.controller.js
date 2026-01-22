@@ -3,6 +3,13 @@ import { AppError } from "../utils/AppError.js";
 
 export const createProduct = async (req, res, next) => {
   try {
+
+    if (!req.user?.sellerProfileCompleted) {
+    return next(
+      new AppError("Complete your seller profile before adding products", 403)
+    );
+    }
+    
     const { name, price, originalPrice, description, category, brand, stock, sku } = req.body;
 
     if (!name || !price || !description || !category || !brand) {
