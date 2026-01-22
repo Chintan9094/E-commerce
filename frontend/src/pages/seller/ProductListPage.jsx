@@ -1,13 +1,17 @@
 import { Link } from "react-router-dom";
 import { PencilIcon, TrashIcon, PlusIcon } from "@heroicons/react/24/outline";
 import Button from "../../components/common/Button";
-import { getMyProducts } from "../../services/product.service";
+import { deleteProduct, getMyProducts } from "../../services/product.service";
 import { useEffect, useState } from "react";
+import { toast } from 'react-toastify'
 
 const ProductListPage = () => {
   const [products, setProducts] = useState([]);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [showModal, setShowModal] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
+
 
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("");
@@ -52,6 +56,25 @@ const ProductListPage = () => {
         return "bg-red-100 text-red-800";
       default:
         return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const openDeleteModal = (id) => {
+    setDeleteId(id);
+    setShowModal(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      const res = await deleteProduct(deleteId);
+
+      toast.success(res.data.message || "Product deleted successfully!");
+
+      setProducts((prev) => prev.filter((p) => p._id !== deleteId));
+      setShowModal(false);
+      setDeleteId(null);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Delete failed");
     }
   };
 
@@ -145,13 +168,45 @@ const ProductListPage = () => {
                       <Link to={`/seller/products/edit/${product._id}`}>
                         <PencilIcon className="w-5 h-5 text-blue-600" />
                       </Link>
-                      <TrashIcon className="w-5 h-5 text-red-600 cursor-pointer" />
+                     <TrashIcon
+                        onClick={() => openDeleteModal(product._id)}
+                        className="w-5 h-5 text-red-600 cursor-pointer"
+                      />
                     </td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
+          {showModal && (
+            <div className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg p-6 w-[320px] shadow-lg">
+                <h2 className="text-lg font-semibold text-gray-800 mb-3">
+                  Delete Product
+                </h2>
+
+                <p className="text-gray-600 mb-6">
+                  Are you sure you want to delete this product?
+                </p>
+
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={() => setShowModal(false)}
+                    className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    onClick={confirmDelete}
+                    className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="bg-gray-50 px-6 py-4 flex justify-between items-center">

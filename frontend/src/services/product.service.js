@@ -12,3 +12,4 @@ export const createProduct = (formData) =>
       "Content-Type": "multipart/form-data",
     },
   });
+export const deleteProduct = (id) => api.delete(`/products/${id}`);
