@@ -3,9 +3,9 @@ import { AppError } from "../utils/AppError.js";
 
 export const createProduct = async (req, res, next) => {
   try {
-    const { name, price, originalPrice, description, category, stock, sku } = req.body;
+    const { name, price, originalPrice, description, category, brand, stock, sku } = req.body;
 
-    if (!name || !price || !description || !category) {
+    if (!name || !price || !description || !category || !brand) {
       return next(new AppError("Required fields missing", 400));
     }
 
@@ -17,6 +17,7 @@ export const createProduct = async (req, res, next) => {
       originalPrice,
       description,
       category,
+      brand,
       stock,
       sku,
       image: imageUrl,
@@ -74,6 +75,7 @@ export const getProductByQuery = async (req, res, next) => {
     const {
       search,
       category,
+      brand,
       sort,
       price,
       rating,
@@ -86,6 +88,10 @@ export const getProductByQuery = async (req, res, next) => {
     if (search) queryObj.$text = { $search: search };
     if (category) {
       queryObj.category = { $regex: `^${category}$`, $options: "i" };
+    }
+
+    if (brand) {
+      queryObj.brand = { $regex: `^${brand}$`, $options: "i" };
     }
 
     if (price) {
@@ -209,8 +215,6 @@ export const deleteProduct = async (req, res, next) => {
 };
 
 export const getMyProducts = async (req, res, next) => {
-  console.log("USER:", req.user);
-
   try {
     const { search, sort, page = 1, limit = 5 } = req.query;
 

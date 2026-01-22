@@ -6,3 +6,9 @@ export const getProductsByQuery = (params) => {
 };
 export const getProductById = (id) => api.get(`/products/${id}`);
 export const getMyProducts = (params) => api.get("/products/my", { params });
+export const createProduct = (formData) =>
+  api.post("/products/", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
