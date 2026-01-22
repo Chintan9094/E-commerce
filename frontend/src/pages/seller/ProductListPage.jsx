@@ -1,61 +1,57 @@
-import { Link } from 'react-router-dom';
-import { PencilIcon, TrashIcon, PlusIcon, EyeIcon } from '@heroicons/react/24/outline';
-import Button from '../../components/common/Button';
+import { Link } from "react-router-dom";
+import { PencilIcon, TrashIcon, PlusIcon } from "@heroicons/react/24/outline";
+import Button from "../../components/common/Button";
+import { getMyProducts } from "../../services/product.service";
+import { useEffect, useState } from "react";
 
 const ProductListPage = () => {
-  const products = [
-    {
-      id: 1,
-      name: 'Wireless Headphones',
-      sku: 'WH-001',
-      price: 2999,
-      stock: 45,
-      status: 'Active',
-      image: 'https://via.placeholder.com/100x100?text=Headphones',
-      sales: 120,
-    },
-    {
-      id: 2,
-      name: 'Smart Watch',
-      sku: 'SW-002',
-      price: 8999,
-      stock: 32,
-      status: 'Active',
-      image: 'https://via.placeholder.com/100x100?text=Smart+Watch',
-      sales: 89,
-    },
-    {
-      id: 3,
-      name: 'Laptop Backpack',
-      sku: 'LB-003',
-      price: 1499,
-      stock: 8,
-      status: 'Low Stock',
-      image: 'https://via.placeholder.com/100x100?text=Backpack',
-      sales: 156,
-    },
-    {
-      id: 4,
-      name: 'Bluetooth Speaker',
-      sku: 'BS-004',
-      price: 2499,
-      stock: 0,
-      status: 'Out of Stock',
-      image: 'https://via.placeholder.com/100x100?text=Speaker',
-      sales: 203,
-    },
-  ];
+  const [products, setProducts] = useState([]);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+
+  const [search, setSearch] = useState("");
+  const [sort, setSort] = useState("");
+
+  const limit = 5;
+
+  const fetchProducts = async () => {
+    try {
+      const { data } = await getMyProducts({ 
+        search,
+        sort,
+        page,
+        limit,
+      });
+
+      setProducts(data.products);
+      setTotal(data.total);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, [search, sort, page]);
+
+  const totalPages = Math.ceil(total / limit);
+
+  const getStatus = (stock) => {
+    if (stock === 0) return "Out of Stock";
+    if (stock < 10) return "Low Stock";
+    return "Active";
+  };
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Active':
-        return 'bg-green-100 text-green-800';
-      case 'Low Stock':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'Out of Stock':
-        return 'bg-red-100 text-red-800';
+      case "Active":
+        return "bg-green-100 text-green-800";
+      case "Low Stock":
+        return "bg-yellow-100 text-yellow-800";
+      case "Out of Stock":
+        return "bg-red-100 text-red-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -76,24 +72,27 @@ const ProductListPage = () => {
           <input
             type="text"
             placeholder="Search products..."
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={search}
+            onChange={(e) => {
+              setPage(1);
+              setSearch(e.target.value);
+            }}
+            className="px-4 py-2 border rounded-lg"
           />
-          <select className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <option value="">All Status</option>
-            <option value="active">Active</option>
-            <option value="low-stock">Low Stock</option>
-            <option value="out-of-stock">Out of Stock</option>
-          </select>
-          <select className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+
+          <select
+            value={sort}
+            onChange={(e) => {
+              setPage(1);
+              setSort(e.target.value);
+            }}
+            className="px-4 py-2 border rounded-lg"
+          >
             <option value="">Sort By</option>
-            <option value="name">Name</option>
-            <option value="price">Price</option>
-            <option value="stock">Stock</option>
-            <option value="sales">Sales</option>
+            <option value="price-low">Price Low → High</option>
+            <option value="price-high">Price High → Low</option>
+            <option value="newest">Newest</option>
           </select>
-          <Button variant="secondary" className="w-full">
-            Apply Filters
-          </Button>
         </div>
       </div>
 
@@ -103,64 +102,93 @@ const ProductListPage = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">SKU</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stock</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sales</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                <th className="px-6 py-3">SKU</th>
+                <th className="px-6 py-3">Price</th>
+                <th className="px-6 py-3">Stock</th>
+                <th className="px-6 py-3">Sales</th>
+                <th className="px-6 py-3">Status</th>
+                <th className="px-6 py-3">Actions</th>
               </tr>
             </thead>
+
             <tbody className="divide-y divide-gray-200">
-              {products.map((product) => (
-                <tr key={product.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center">
+              {products.map((product) => {
+                const status = getStatus(product.stock);
+
+                return (
+                  <tr key={product._id}>
+                    <td className="px-6 py-4 flex items-center gap-3">
                       <img
                         src={product.image}
                         alt={product.name}
-                        className="w-12 h-12 object-cover rounded-lg mr-3"
+                        className="w-12 h-12 rounded"
                       />
-                      <span className="font-medium text-gray-900">{product.name}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{product.sku}</td>
-                  <td className="px-6 py-4 text-sm font-medium text-gray-900">₹{product.price.toLocaleString()}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{product.stock}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{product.sales}</td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(product.status)}`}>
-                      {product.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center space-x-2">
-                      <Link
-                        to={`/seller/products/edit/${product.id}`}
-                        className="text-blue-600 hover:text-blue-700"
+                      {product.name}
+                    </td>
+
+                    <td className="px-6 py-4">{product.sku || "-"}</td>
+                    <td className="px-6 py-4">₹{product.price}</td>
+                    <td className="px-6 py-4">{product.stock}</td>
+                    <td className="px-6 py-4">{product.sales}</td>
+
+                    <td className="px-6 py-4">
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs ${getStatusColor(
+                          status
+                        )}`}
                       >
-                        <PencilIcon className="w-5 h-5" />
+                        {status}
+                      </span>
+                    </td>
+
+                    <td className="px-6 py-4 flex gap-2">
+                      <Link to={`/seller/products/edit/${product._id}`}>
+                        <PencilIcon className="w-5 h-5 text-blue-600" />
                       </Link>
-                      <button className="text-red-600 hover:text-red-700">
-                        <TrashIcon className="w-5 h-5" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                      <TrashIcon className="w-5 h-5 text-red-600 cursor-pointer" />
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
 
-        <div className="bg-gray-50 px-6 py-4 flex items-center justify-between">
+        <div className="bg-gray-50 px-6 py-4 flex justify-between items-center">
           <div className="text-sm text-gray-600">
-            Showing 1 to {products.length} of {products.length} products
+            Showing {(page - 1) * limit + 1} to{" "}
+            {Math.min(page * limit, total)} of {total} products
           </div>
-          <div className="flex space-x-2">
-            <Button variant="outline" size="sm">Previous</Button>
-            <Button variant="primary" size="sm">1</Button>
-            <Button variant="outline" size="sm">2</Button>
-            <Button variant="outline" size="sm">Next</Button>
+
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page === 1}
+              onClick={() => setPage(page - 1)}
+            >
+              Previous
+            </Button>
+
+            {[...Array(totalPages)].map((_, i) => (
+              <Button
+                key={i}
+                variant={page === i + 1 ? "primary" : "outline"}
+                size="sm"
+                onClick={() => setPage(i + 1)}
+              >
+                {i + 1}
+              </Button>
+            ))}
+
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page === totalPages}
+              onClick={() => setPage(page + 1)}
+            >
+              Next
+            </Button>
           </div>
         </div>
       </div>

@@ -1,10 +1,25 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from '../components/common/Sidebar';
 import { Bars3Icon } from '@heroicons/react/24/outline';
+import { getProfile } from '../services/auth.service';
 
 const SellerLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [seller, setSeller] = useState();
+
+  const fetchSeller = async () => {
+    try {
+      const res = await getProfile();
+      setSeller(res.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    fetchSeller();
+  },[]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -22,7 +37,7 @@ const SellerLayout = () => {
             
             <div className="flex-1 flex justify-end items-center space-x-4">
               <div className="text-sm text-gray-600">
-                Welcome, <span className="font-semibold">Seller Name</span>
+                Welcome, <span className="font-semibold">{seller ? seller.user.name : "Loading..."}</span>
               </div>
             </div>
           </div>

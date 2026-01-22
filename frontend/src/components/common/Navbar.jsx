@@ -1,12 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import {
-  ShoppingCartIcon,
-  HeartIcon,
-  UserIcon,
-  MagnifyingGlassIcon,
-  Bars3Icon,
-  ArrowLeftStartOnRectangleIcon,
-} from "@heroicons/react/24/outline";
+import { ShoppingCartIcon, HeartIcon, UserIcon, MagnifyingGlassIcon, Bars3Icon, ArrowLeftStartOnRectangleIcon, } from "@heroicons/react/24/outline";
 import { useState, useEffect } from "react";
 import { logoutUser } from "../../services/auth.service";
 import { useAuth } from "../../context/AuthContext";
@@ -38,7 +31,6 @@ const Navbar = () => {
     setSearchQuery("");
   };
 
-  // ❤️ Wishlist sync (instant update)
   useEffect(() => {
     const updateWishlist = () => {
       const wishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
@@ -54,7 +46,6 @@ const Navbar = () => {
     };
   }, []);
 
-  // 🛒 Cart sync (instant update from backend)
   useEffect(() => {
     const updateCart = async () => {
       try {
@@ -108,7 +99,6 @@ const Navbar = () => {
               <MagnifyingGlassIcon className="w-6 h-6" />
             </button>
 
-            {/* Wishlist */}
             <Link
               to="/user/wishlist"
               className="relative text-gray-600 hover:text-gray-900"
@@ -121,7 +111,6 @@ const Navbar = () => {
               )}
             </Link>
 
-            {/* Cart */}
             <Link
               to="/user/cart"
               className="relative text-gray-600 hover:text-gray-900"

@@ -3,8 +3,7 @@ import { AppError } from "../utils/AppError.js";
 
 export const createProduct = async (req, res, next) => {
   try {
-    const { name, price, originalPrice, description, category, seller } =
-      req.body;
+    const { name, price, originalPrice, description, category, stock, sku } = req.body;
 
     if (!name || !price || !description || !category) {
       return next(new AppError("Required fields missing", 400));
@@ -18,6 +17,8 @@ export const createProduct = async (req, res, next) => {
       originalPrice,
       description,
       category,
+      stock,
+      sku,
       image: imageUrl,
       seller: req.user._id,
     });
@@ -203,6 +204,43 @@ export const deleteProduct = async (req, res, next) => {
     if (error.message === "CastError") {
       return next(new AppError("Invalid ID formate", 404));
     }
+    next(error);
+  }
+};
+
+export const getMyProducts = async (req, res, next) => {
+  console.log("USER:", req.user);
+
+  try {
+    const { search, sort, page = 1, limit = 5 } = req.query;
+
+    const queryObj = {
+      seller: req.user._id.toString(),
+    };
+
+    if (search) {
+      queryObj.$text = { $search: search };
+    }
+
+    let query = Product.find(queryObj);
+
+    if (sort === "price-low") query = query.sort({ price: 1 });
+    else if (sort === "price-high") query = query.sort({ price: -1 });
+    else query = query.sort({ createdAt: -1 });
+
+    const skip = (page - 1) * limit;
+    query = query.skip(skip).limit(Number(limit));
+    const products = await query;
+    const total = await Product.countDocuments(queryObj);
+
+    res.json({
+      success: true,
+      products,
+      total,
+      page: Number(page),
+      limit: Number(limit),
+    });
+  } catch (error) {
     next(error);
   }
 };
