@@ -4,9 +4,8 @@ import { generateToken } from "../utils/jwt.js";
 import { AppError } from "../utils/AppError.js";
 
 export const registerUser = async (req, res, next) => {
-    console.log("next is:", typeof next);
   try {
-    const { name, email, password, role, phone, dob, gender } = req.body;
+    const { name, email, password, role, phone, dob, gender, shopName, gstNo } = req.body;
 
     if (!name || !email || !password || !phone || !dob || !gender) {
       return next(new AppError("All fields required", 400));
@@ -17,6 +16,13 @@ export const registerUser = async (req, res, next) => {
       return next(new AppError("Email already exists", 400));
     }
 
+    if (gstNo) {
+      const gstExist = await User.findOne({ gstNo });
+      if (gstExist) {
+        return next(new AppError("GST number already exists", 400));
+      }
+    }
+
     const user = await User.create({
       name,
       email,
@@ -25,6 +31,8 @@ export const registerUser = async (req, res, next) => {
       phone,
       dob,
       gender,
+      shopName,
+      gstNo
     });
 
     const token = generateToken({ id: user._id });
@@ -44,7 +52,6 @@ export const registerUser = async (req, res, next) => {
       token,
     });
   } catch (error) {
-      console.log("REGISTER ERROR 👉", error);
     next(error);
   }
 };

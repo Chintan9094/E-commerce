@@ -27,16 +27,6 @@ const SellerProfilePage = () => {
 
   return (
     <div>
-        <div className="mb-6 bg-yellow-50 border border-yellow-300 p-4 rounded-lg flex items-center justify-between">
-          <div>
-            <h3 className="font-semibold text-yellow-800">
-              ⚠️ Complete your seller profile
-            </h3>
-            <p className="text-sm text-yellow-700">
-              Until you complete your details, you won’t be able to sell products.
-            </p>
-          </div>
-        </div>
       <h1 className="text-3xl font-bold text-gray-900 mb-8">Seller Profile</h1>
 
       <div className="bg-white rounded-lg shadow-md p-6 lg:p-8">

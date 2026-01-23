@@ -3,11 +3,9 @@ import { PencilIcon, TrashIcon, PlusIcon } from "@heroicons/react/24/outline";
 import Button from "../../components/common/Button";
 import { deleteProduct, getMyProducts } from "../../services/product.service";
 import { useEffect, useState } from "react";
-import { toast } from 'react-toastify'
-import { useAuth } from "../../context/AuthContext";
+import { toast } from 'react-toastify';
 
 const ProductListPage = () => {
-  const { user } = useAuth();
   const [products, setProducts] = useState([]);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -82,40 +80,14 @@ const ProductListPage = () => {
 
   return (
     <div>
-        {!user?.sellerProfileCompleted && (
-          <div className="mb-6 bg-yellow-50 border border-yellow-300 p-4 rounded-lg flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold text-yellow-800">
-                ⚠️ Complete your seller profile
-              </h3>
-              <p className="text-sm text-yellow-700">
-                Until you complete your details, you won’t be able to sell products.
-              </p>
-            </div>
-
-            <Link to="/seller/profile">
-              <Button variant="primary">Complete Now</Button>
-            </Link>
-          </div>
-        )}
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold text-gray-900">My Products</h1>
-        {user?.sellerProfileCompleted ? (
           <Link to="/seller/products/add">
             <Button variant="primary">
               <PlusIcon className="w-5 h-5 mr-2 inline" />
               Add Product
             </Button>
           </Link>
-        ) : (
-          <Button
-            disabled
-            className="opacity-50 cursor-not-allowed"
-            onClick={() => toast.error("Complete seller profile to add products")}
-          >
-            🔒 Complete profile to Products
-          </Button>
-        )}
       </div>
 
       <div className="bg-white rounded-lg shadow-md p-4 mb-6">
@@ -153,12 +125,12 @@ const ProductListPage = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
-                <th className="px-6 py-3">SKU</th>
-                <th className="px-6 py-3">Price</th>
-                <th className="px-6 py-3">Stock</th>
-                <th className="px-6 py-3">Sales</th>
-                <th className="px-6 py-3">Status</th>
-                <th className="px-6 py-3">Actions</th>
+                <th className="px-6 py-3 text-left">SKU</th>
+                <th className="px-6 py-3 text-left">Price</th>
+                <th className="px-6 py-3 text-left">Stock</th>
+                <th className="px-6 py-3 text-left">Sales</th>
+                <th className="px-6 py-3 text-left">Status</th>
+                <th className="px-6 py-3 text-left">Actions</th>
               </tr>
             </thead>
 

@@ -39,6 +39,21 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "seller", "admin"],
       default: "user",
     },
+    shopName: {
+      type: String,
+      required: function () {
+    return this.role === "seller";
+  },
+    },
+    gstNo: {
+      type: String,
+      required: function () {
+    return this.role === "seller";
+  },
+      unique: true,
+      minlength: [15,"GST number must be exactly 15 characters"],
+      maxlength: [15,"GST number must be exactly 15 characters"],
+  },
   },
   { timestamps: true }
 );

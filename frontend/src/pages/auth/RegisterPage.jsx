@@ -10,18 +10,31 @@ const RegisterPage = () => {
   const navigate = useNavigate();
   const { setUser } = useAuth();
 
-const [formData, setFormData] = useState({
-  name: "",
-  email: "",
-  password: "",
-  phone: "",
-  dob: "",
-  gender: "",
-  role: "user",
-});
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    phone: "",
+    dob: "",
+    gender: "",
+    role: "user",
+    shopName: "",
+    gstNo: "",
+  });
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    if (name === "role" && value === "user") {
+      setFormData({
+        ...formData,
+        role: value,
+        shopName: "",
+        gstNo: "",
+      });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -29,7 +42,7 @@ const [formData, setFormData] = useState({
 
     try {
       const res = await registerUser(formData);
-
+      console.log(res)
       toast.success("Registration successful");
       setUser(res.data.user);
 
@@ -38,11 +51,8 @@ const [formData, setFormData] = useState({
       } else {
         navigate("/", { replace: true });
       }
-
     } catch (error) {
-      toast.error(
-        error.response?.data?.message || "Registration failed"
-      );
+      toast.error(error.response?.data?.message || "Registration failed");
     }
   };
 
@@ -69,7 +79,6 @@ const [formData, setFormData] = useState({
           onSubmit={handleSubmit}
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
             <Input
               label="Full Name"
               name="name"
@@ -152,16 +161,42 @@ const [formData, setFormData] = useState({
                 <option value="seller">Seller</option>
               </select>
             </div>
+            {formData.role === "seller" && (
+              <>
+                <Input
+                  label="Shop Name"
+                  name="shopName"
+                  type="text"
+                  value={formData.shopName}
+                  onChange={handleChange}
+                  placeholder="Enter shop name"
+                  required
+                />
+
+                <Input
+                  label="GST Number"
+                  name="gstNo"
+                  type="text"
+                  value={formData.gstNo}
+                  onChange={handleChange}
+                  placeholder="Enter GST number"
+                  required
+                />
+              </>
+            )}
 
             <div className="md:col-span-2">
-              <Button type="submit" variant="primary" size="lg" className="w-full">
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                className="w-full"
+              >
                 Create Account
               </Button>
             </div>
-
           </div>
         </form>
-
       </div>
     </div>
   );

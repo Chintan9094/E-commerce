@@ -4,21 +4,9 @@ import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import Input from "../../components/common/Input";
 import Button from "../../components/common/Button";
 import { createProduct } from "../../services/product.service";
-import { useAuth } from "../../context/AuthContext";
-import { useNavigate } from "react-router-dom";
 import { toast } from 'react-toastify'
 
 const AddProductPage = () => {
-
-  const { user, loading } = useAuth();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!loading && user && !user.sellerProfileCompleted) {
-      toast.error("Complete seller profile first");
-      navigate("/seller/dashboard");
-    }
-  }, [user, loading]);
 
   const [formData, setFormData] = useState({
     name: "",
