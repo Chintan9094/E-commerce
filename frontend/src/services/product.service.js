@@ -13,3 +13,9 @@ export const createProduct = (formData) =>
     },
   });
 export const deleteProduct = (id) => api.delete(`/products/${id}`);
+export const updateProduct = (id, formData) =>
+  api.put(`/products/${id}`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });

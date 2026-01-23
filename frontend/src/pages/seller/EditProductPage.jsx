@@ -1,44 +1,106 @@
-import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
-import Input from '../../components/common/Input';
-import Button from '../../components/common/Button';
+import { useEffect, useRef, useState } from "react";
+import { useParams, Link } from "react-router-dom";
+import { ArrowLeftIcon } from "@heroicons/react/24/outline";
+import Input from "../../components/common/Input";
+import Button from "../../components/common/Button";
+import { getProductById, updateProduct } from "../../services/product.service";
+import { toast } from "react-toastify";
 
 const EditProductPage = () => {
   const { id } = useParams();
-  
+  const fileInputRef = useRef();
   const [formData, setFormData] = useState({
-    name: 'Wireless Headphones',
-    description: 'Premium wireless headphones with noise cancellation',
-    price: '2999',
-    originalPrice: '3999',
-    category: 'electronics',
-    brand: 'TechBrand',
-    stock: '45',
-    sku: 'WH-001',
-    images: [],
+    name: "",
+    description: "",
+    price: "",
+    originalPrice: "",
+    category: "",
+    brand: "",
+    stock: "",
+    sku: "",
+    images: null,
   });
+
+  const [preview, setPreview] = useState("");
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        const { data } = await getProductById(id);
+        setFormData({
+          name: data.product.name,
+          description: data.product.description,
+          price: data.product.price,
+          originalPrice: data.product.originalPrice,
+          category: data.product.category,
+          brand: data.product.brand,
+          stock: data.product.stock,
+          sku: data.product.sku,
+          image: null,
+        });
+
+        setPreview(data.product.image);
+      } catch (err) {
+        console.log(err);
+      }
+    };
+
+    fetchProduct();
+  }, [id]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Product updated', formData);
+
+    try {
+      const data = new FormData();
+
+      for (let key in formData) {
+        if (formData[key]) {
+          data.append(key, formData[key]);
+        }
+      }
+
+      await updateProduct(id, data);
+      toast.success("Product updated successfully");
+    } catch (err) {
+      toast.error("Update failed");
+    }
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    setFormData({ ...formData, image: file });
+
+    if (file) {
+      setPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleButtonClick = () => {
+    fileInputRef.current.click();
   };
 
   return (
     <div>
-      <Link to="/seller/products" className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-6">
+      <Link
+        to="/seller/products"
+        className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-6"
+      >
         <ArrowLeftIcon className="w-5 h-5 mr-2" />
         Back to Products
       </Link>
 
       <h1 className="text-3xl font-bold text-gray-900 mb-8">Edit Product</h1>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6 lg:p-8">
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white rounded-lg shadow-md p-6 lg:p-8"
+      >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="lg:col-span-2">
             <Input
@@ -86,25 +148,13 @@ const EditProductPage = () => {
             required
           />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Category <span className="text-red-500">*</span>
-            </label>
-            <select
-              name="category"
-              value={formData.category}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            >
-              <option value="electronics">Electronics</option>
-              <option value="fashion">Fashion</option>
-              <option value="home">Home & Kitchen</option>
-              <option value="books">Books</option>
-              <option value="sports">Sports</option>
-              <option value="toys">Toys</option>
-            </select>
-          </div>
+          <Input
+            label="Category"
+            name="category"
+            value={formData.category}
+            onChange={handleChange}
+            placeholder="Enter category"
+          />
 
           <Input
             label="Brand"
@@ -135,22 +185,41 @@ const EditProductPage = () => {
 
           <div className="lg:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Product Images <span className="text-red-500">*</span>
+              Product Image
             </label>
+
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-              <p className="text-gray-600 mb-2">Click to upload or drag and drop</p>
-              <p className="text-sm text-gray-500 mb-4">PNG, JPG, GIF up to 10MB</p>
-              <Button variant="outline" type="button">
-                Upload Images
+              <p className="text-gray-600 mb-2">
+                Click to upload or drag and drop
+              </p>
+              <p className="text-sm text-gray-500 mb-4">
+                PNG, JPG, GIF up to 10MB
+              </p>
+
+              <Button
+                variant="outline"
+                type="button"
+                onClick={handleButtonClick}
+              >
+                Upload Image
               </Button>
+
+              <input
+                type="file"
+                accept="image/*"
+                ref={fileInputRef}
+                onChange={handleImageChange}
+                className="hidden"
+              />
             </div>
-            <div className="grid grid-cols-4 gap-4 mt-4">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center">
-                  <span className="text-gray-400 text-sm">Image {i}</span>
-                </div>
-              ))}
-            </div>
+
+            {preview && (
+              <img
+                src={preview}
+                alt="preview"
+                className="w-32 h-32 object-cover mt-4 rounded"
+              />
+            )}
           </div>
         </div>
 

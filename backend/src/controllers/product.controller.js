@@ -3,7 +3,16 @@ import { AppError } from "../utils/AppError.js";
 
 export const createProduct = async (req, res, next) => {
   try {
-    const { name, price, originalPrice, description, category, brand, stock, sku } = req.body;
+    const {
+      name,
+      price,
+      originalPrice,
+      description,
+      category,
+      brand,
+      stock,
+      sku,
+    } = req.body;
 
     if (!name || !price || !description || !category || !brand) {
       return next(new AppError("Required fields missing", 400));
@@ -153,17 +162,36 @@ export const getProductByQuery = async (req, res, next) => {
 export const updateProduct = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { name, price, description, category } = req.body;
 
-    if (!name && !price && !description && !category) {
-      return next(new AppError("Atleast one filed is required", 400));
-    }
+    const {
+      name,
+      price,
+      description,
+      category,
+      originalPrice,
+      brand,
+      stock,
+      sku,
+    } = req.body;
 
     const updateData = {};
+
     if (name) updateData.name = name;
     if (price) updateData.price = price;
     if (description) updateData.description = description;
     if (category) updateData.category = category;
+    if (originalPrice) updateData.originalPrice = originalPrice;
+    if (brand) updateData.brand = brand;
+    if (stock) updateData.stock = stock;
+    if (sku) updateData.sku = sku;
+
+    if (req.file) {
+      updateData.image = req.file.path;
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return next(new AppError("Atleast one field is required", 400));
+    }
 
     const product = await Product.findByIdAndUpdate(id, updateData, {
       new: true,
@@ -175,10 +203,6 @@ export const updateProduct = async (req, res, next) => {
 
     if (product.seller.toString() !== req.user._id.toString()) {
       return next(new AppError("Not your product", 403));
-    }
-
-    if (req.file) {
-      product.image = req.file.path;
     }
 
     res.json({
