@@ -12,7 +12,7 @@ const CartPage = () => {
     const fetchCart = async () => {
       try {
         const res = await getMyCart()
-        setCartItems(res.data?.cart.items || []);
+        setCartItems(res.data?.cart.items ?? []);
       } catch (error) {
         console.error("Error fetching product:", error);
       } finally {
@@ -85,7 +85,7 @@ const CartPage = () => {
               key={index}
               className="bg-white rounded-lg shadow-md p-4 flex flex-col sm:flex-row gap-4"
             >
-              <Link to={`/user/product/${item.product.productId}`} className="shrink-0">
+              <Link to={`/user/product/${item.product._id}`} className="shrink-0">
                 <img
                   src={item.product.image}
                   alt={item.product.name}
@@ -104,24 +104,34 @@ const CartPage = () => {
                 </p>
 
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center border rounded-lg">
-                    <button
-                      onClick={() => updateQuantity(item.product._id, item.quantity - 1)}
-                      className="p-2 hover:bg-gray-100"
-                      disabled={item.quantity <= 1}
-                    >
-                      <MinusIcon className="w-4 h-4" />
-                    </button>
-                    <span className="px-4 py-2">{item.quantity}</span>
-                    <button
-                      onClick={() => updateQuantity(item.product._id, item.quantity + 1)}
-                      className="p-2 hover:bg-gray-100"
-                      disabled={item.quantity >= item.stock}
-                    >
-                      <PlusIcon className="w-4 h-4" />
-                    </button>
-                  </div>
+                    {console.log("qty:", item.quantity, "stock:", item.product.stock)}
+                  <div className="flex flex-col">
+                    <div className="flex items-center border rounded-lg">
+                      <button
+                        onClick={() => updateQuantity(item.product._id, item.quantity - 1)}
+                        className="p-2 hover:bg-gray-100"
+                        disabled={item.quantity <= 1}
+                      >
+                        <MinusIcon className="w-4 h-4" />
+                      </button>
 
+                      <span className="px-4 py-2">{item.quantity}</span>
+
+                      <button
+                        onClick={() => updateQuantity(item.product._id, item.quantity + 1)}
+                        className="p-2 hover:bg-gray-100"
+                        disabled={item.quantity >= item.product.stock}
+                      >
+                        <PlusIcon className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    {item.quantity >= item.product.stock && (
+                      <p className="text-xs text-red-600 mt-1">
+                        Out of stock
+                      </p>
+                    )}
+                  </div>
                   <div className="flex items-center space-x-4">
                     <span className="text-lg font-semibold">
                       ₹{(item.product.price * item.quantity).toLocaleString()}

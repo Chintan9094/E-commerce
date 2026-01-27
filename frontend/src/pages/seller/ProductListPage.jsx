@@ -11,9 +11,8 @@ const ProductListPage = () => {
   const [total, setTotal] = useState(0);
   const [showModal, setShowModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
-
-
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState(search);
   const [sort, setSort] = useState("");
 
   const limit = 5;
@@ -21,7 +20,7 @@ const ProductListPage = () => {
   const fetchProducts = async () => {
     try {
       const { data } = await getMyProducts({ 
-        search,
+        search: debouncedSearch,
         sort,
         page,
         limit,
@@ -36,7 +35,15 @@ const ProductListPage = () => {
 
   useEffect(() => {
     fetchProducts();
-  }, [search, sort, page]);
+  }, [debouncedSearch, sort, page]);
+
+  useEffect(() => {
+  const timer = setTimeout(() => {
+    setDebouncedSearch(search);
+  }, 1000);
+
+  return () => clearTimeout(timer);
+}, [search]);
 
   const totalPages = Math.ceil(total / limit);
 
@@ -124,7 +131,7 @@ const ProductListPage = () => {
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
+                <th className="px-6 py-3 text-left">Product</th>
                 <th className="px-6 py-3 text-left">SKU</th>
                 <th className="px-6 py-3 text-left">Price</th>
                 <th className="px-6 py-3 text-left">Stock</th>

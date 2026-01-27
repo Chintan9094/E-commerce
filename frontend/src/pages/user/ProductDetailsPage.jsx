@@ -30,6 +30,7 @@ const ProductDetailsPage = () => {
   const [ratingInput, setRatingInput] = useState("");
   const [commentInput, setCommentInput] = useState("");
   const [productReviews, setProductReviews] = useState([]);
+  const inStock = product?.stock > 0;
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -122,6 +123,23 @@ const ProductDetailsPage = () => {
     }
   };
 
+  const stock = product?.stock || 0;
+
+let stockMessage = "";
+let stockClass = "";
+
+if (stock === 0) {
+  stockMessage = "Out of Stock";
+  stockClass = "text-red-600";
+} else if (stock <= 50) {
+  stockMessage = `Only ${stock} left`;
+  stockClass = "text-orange-600";
+} else {
+  stockMessage = "In Stock";
+  stockClass = "text-green-600";
+}
+
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <nav className="text-sm mb-6">
@@ -185,6 +203,12 @@ const ProductDetailsPage = () => {
             </div>
           </div>
 
+          <div className="mb-4">
+            <span className={`font-semibold ${stockClass}`}>
+              {stockMessage}
+            </span>
+          </div>
+
           <div className="mb-6">
             <h3 className="font-semibold mb-2">Description</h3>
             <p className="text-gray-600">{product.description}</p>
@@ -201,7 +225,7 @@ const ProductDetailsPage = () => {
               </button>
               <span className="px-6">{quantity}</span>
               <button
-                onClick={() => setQuantity(quantity + 1)}
+                onClick={() => setQuantity(Math.min(product?.stock, quantity + 1))}
                 className="px-4 py-2"
               >
                 +
@@ -212,10 +236,11 @@ const ProductDetailsPage = () => {
           <div className="flex space-x-4">
             <Button
               onClick={() => addInCart(product)}
+              disabled={product.stock === 0}
               className="flex-1 flex items-center justify-center"
             >
               <ShoppingCartIcon className="w-5 h-5 mr-2" />
-              Add to Cart
+              {product?.stock === 0 ? "Out of Stock" : "Add to Cart"}
             </Button>
 
             <Button variant="outline" onClick={toggleWishlist}>
