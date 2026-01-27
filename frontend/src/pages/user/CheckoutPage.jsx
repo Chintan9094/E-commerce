@@ -228,7 +228,7 @@ const CheckoutPage = () => {
           <div className="border-t pt-4 space-y-2">
               <div className="flex justify-between text-gray-600">
                 <span>Shipping</span>
-                <span className="text-green-600">Free</span>
+                <span>{shipping === 0 ? 'Free' : `₹${shipping}`}</span>
               </div>
               <div className="flex justify-between text-gray-600">
                 <span>Tax (GST) 18%</span>

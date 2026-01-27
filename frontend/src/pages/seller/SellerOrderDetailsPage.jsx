@@ -1,44 +1,36 @@
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import Button from '../../components/common/Button';
+import { useEffect, useState } from 'react';
+import { getOrderById } from '../../services/order.service';
 
 const SellerOrderDetailsPage = () => {
   const { id } = useParams();
+  const [order, setOrder] = useState(null);
 
-  const order = {
-    id: id,
-    customer: {
-      name: 'John Doe',
-      email: 'john.doe@example.com',
-      phone: '+91 9876543210',
-    },
-    product: {
-      name: 'Wireless Headphones',
-      sku: 'WH-001',
-      quantity: 2,
-      price: 2999,
-      image: 'https://via.placeholder.com/100x100?text=Headphones',
-    },
-    shipping: {
-      address: '123 Main Street, Apartment 4B',
-      city: 'Mumbai',
-      state: 'Maharashtra',
-      pincode: '400001',
-    },
-    amount: {
-      subtotal: 5998,
-      shipping: 0,
-      tax: 1079.64,
-      total: 7077.64,
-    },
-    status: 'Pending',
-    date: '2024-01-15',
-    paymentMethod: 'Credit Card',
-  };
+useEffect(() => {
+    const fetchOrder = async () => {
+      try {
+        const res = await getOrderById(id);
+        setOrder(res.data.order);
+        console.log(res.data.order)
+      } catch (error) {
+        console.error('Error fetching order details:', error);
+      }
+    };
+    if (id) fetchOrder();
+  }, [id]);
 
   const updateOrderStatus = (newStatus) => {
     console.log('Update order status to', newStatus);
   };
+
+  if (!order) return <div>Loading...</div>;
+
+  const subtotal = order.items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+  const shipping = subtotal > 5000 ? 0 : 99;
+  const tax = subtotal * 0.18;
+  const total = subtotal + shipping + tax;
 
   return (
     <div>
@@ -49,7 +41,7 @@ const SellerOrderDetailsPage = () => {
 
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Order #{order.id}</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Order #{order._id}</h1>
           <p className="text-gray-600 mt-1">Placed on {order.date}</p>
         </div>
         <span className={`px-4 py-2 rounded-full text-sm font-medium ${
@@ -67,16 +59,16 @@ const SellerOrderDetailsPage = () => {
             <h2 className="text-lg font-semibold mb-4">Product Details</h2>
             <div className="flex items-center space-x-4">
               <img
-                src={order.product.image}
-                alt={order.product.name}
+                src={order.items?.[0]?.product?.image}
+                alt={order.items?.[0]?.product?.name}
                 className="w-20 h-20 object-cover rounded-lg"
               />
               <div className="flex-1">
-                <h3 className="font-medium text-gray-900">{order.product.name}</h3>
-                <p className="text-sm text-gray-600">SKU: {order.product.sku}</p>
-                <p className="text-sm text-gray-600">Quantity: {order.product.quantity}</p>
+                <h3 className="font-medium text-gray-900">{order.items?.[0]?.product?.name}</h3>
+                <p className="text-sm text-gray-600">SKU: {order.items?.[0]?.product?.sku}</p>
+                <p className="text-sm text-gray-600">Quantity: {order.items?.[0]?.quantity}</p>
                 <p className="text-lg font-semibold text-gray-900 mt-1">
-                  ₹{order.product.price.toLocaleString()} each
+                  ₹{order.items?.[0]?.product?.price.toLocaleString()} each
                 </p>
               </div>
             </div>
@@ -85,18 +77,18 @@ const SellerOrderDetailsPage = () => {
           <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-lg font-semibold mb-4">Customer Information</h2>
             <div className="space-y-2 text-sm">
-              <p><span className="font-medium">Name:</span> {order.customer.name}</p>
-              <p><span className="font-medium">Email:</span> {order.customer.email}</p>
-              <p><span className="font-medium">Phone:</span> {order.customer.phone}</p>
+              <p><span className="font-medium">Name:</span> {order.user?.name}</p>
+              <p><span className="font-medium">Email:</span> {order.user?.email}</p>
+              <p><span className="font-medium">Phone:</span> {order.user?.phone}</p>
             </div>
           </div>
 
           <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-lg font-semibold mb-4">Shipping Address</h2>
             <div className="text-sm text-gray-600">
-              <p>{order.shipping.address}</p>
+              <p>{order.address?.address}</p>
               <p>
-                {order.shipping.city}, {order.shipping.state} - {order.shipping.pincode}
+                {order.address?.city}, {order.address?.state} - {order.address?.pincode}
               </p>
             </div>
           </div>
@@ -108,20 +100,20 @@ const SellerOrderDetailsPage = () => {
             <div className="space-y-2 text-sm">
               <div className="flex justify-between text-gray-600">
                 <span>Subtotal</span>
-                <span>₹{order.amount.subtotal.toLocaleString()}</span>
+                <span>₹{order.subtotal}</span>
               </div>
               <div className="flex justify-between text-gray-600">
                 <span>Shipping</span>
-                <span className="text-green-600">Free</span>
+                <span>{shipping === 0 ? 'Free' : `₹${shipping}`}</span>
               </div>
               <div className="flex justify-between text-gray-600">
                 <span>Tax</span>
-                <span>₹{order.amount.tax.toFixed(2)}</span>
+                <span>₹{order.tax}</span>
               </div>
               <div className="border-t pt-2 mt-2">
                 <div className="flex justify-between text-lg font-bold text-gray-900">
                   <span>Total</span>
-                  <span>₹{order.amount.total.toFixed(2)}</span>
+                  <span>₹{order.totalAmount}</span>
                 </div>
               </div>
             </div>

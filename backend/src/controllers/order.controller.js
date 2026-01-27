@@ -92,7 +92,7 @@ export const placeOrder = async (req, res, next) => {
 export const getMyOrders = async (req, res, next) => {
   try {
     const orders = await Order.find({ user: req.user._id })
-      .populate("items.product", "name price image images imageUrl")
+      .populate("items.product", "name price image images imageUrl sku")
       .sort("-createdAt");
 
     res.json({
@@ -109,8 +109,8 @@ export const getOrderById = async (req, res, next) => {
     const { id } = req.params;
 
     const order = await Order.findById(id)
-      .populate("user", "name email")
-      .populate("items.product", "name price image images imageUrl");
+      .populate("user", "name email phone")
+      .populate("items.product", "name price image images imageUrl sku");
 
     if (!order) {
       return next(new AppError("Order not found", 404));
@@ -127,15 +127,99 @@ export const getOrderById = async (req, res, next) => {
 
 export const getAllOrders = async (req, res, next) => {
   try {
-    const orders = await Order.find()
-      .populate("user", "name email")
-      .populate("items.product", "name price image images imageUrl");
+    const { search = "", sort = "", page = 1, limit = 5 } = req.query;
+
+    const pageNum = Number(page);
+    const limitNum = Number(limit);
+    const skip = (pageNum - 1) * limitNum;
+
+    const matchStage = {};
+
+    if (sort) {
+      matchStage.status = sort;
+    }
+
+    const pipeline = [
+      { $match: matchStage },
+
+      {
+        $lookup: {
+          from: "users",
+          localField: "user",
+          foreignField: "_id",
+          as: "userData",
+        },
+      },
+      { $unwind: { path: "$userData", preserveNullAndEmptyArrays: true } },
+
+      { $unwind: { path: "$items", preserveNullAndEmptyArrays: true } },
+
+      {
+        $lookup: {
+          from: "products",
+          localField: "items.product",
+          foreignField: "_id",
+          as: "productData",
+        },
+      },
+      { $unwind: { path: "$productData", preserveNullAndEmptyArrays: true } },
+
+      ...(search
+        ? [
+            {
+              $match: {
+                $or: [
+                  { "userData.name": { $regex: search, $options: "i" } },
+                  { "productData.name": { $regex: search, $options: "i" } },
+                ],
+              },
+            },
+          ]
+        : []),
+
+      { $sort: { createdAt: -1 } },
+
+      {
+        $group: {
+          _id: "$_id",
+          user: { $first: "$userData" },
+          items: {
+            $push: {
+              product: "$productData",
+              quantity: "$items.quantity",
+            },
+          },
+          totalAmount: { $first: "$totalAmount" },
+          status: { $first: "$status" },
+          createdAt: { $first: "$createdAt" },
+        },
+      },
+
+      {
+        $facet: {
+          data: [
+            { $skip: skip },
+            { $limit: limitNum },
+          ],
+          totalCount: [
+            { $count: "count" },
+          ],
+        },
+      },
+    ];
+
+    const result = await Order.aggregate(pipeline);
+
+    const orders = result[0]?.data || [];
+    const total = result[0]?.totalCount[0]?.count || 0;
 
     res.json({
       success: true,
       orders,
+      total,
     });
   } catch (error) {
+    console.error("Aggregation error:", error);
     next(error);
   }
 };

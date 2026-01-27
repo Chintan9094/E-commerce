@@ -25,6 +25,11 @@ const OrderDetailsPage = () => {
 
   if (!order) return <div className="p-10">Loading...</div>;
 
+  const subtotal = order.items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+  const shipping = subtotal > 5000 ? 0 : 99;
+  const tax = subtotal * 0.18;
+  const total = subtotal + shipping + tax;
+
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
       case "delivered":
@@ -202,11 +207,11 @@ const OrderDetailsPage = () => {
               </div>
               <div className="flex justify-between text-gray-600">
                 <span>Shipping</span>
-                <span className="text-green-600">Free</span>
+                <span>{shipping === 0 ? 'Free' : `₹${shipping}`}</span>
               </div>
               <div className="flex justify-between text-gray-600">
-                <span>Tax (GST)</span>
-                <span>₹{order.tax} 18%</span>
+                <span>Tax (GST) 18%</span>
+                <span>₹{order.tax}</span>
               </div>
               <div className="border-t pt-2 mt-2">
                 <div className="flex justify-between text-lg font-bold text-gray-900">

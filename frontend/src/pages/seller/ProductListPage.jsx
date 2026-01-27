@@ -27,6 +27,7 @@ const ProductListPage = () => {
       });
 
       setProducts(data.products);
+      console.log(data.products)
       setTotal(data.total);
     } catch (error) {
       console.error(error);
