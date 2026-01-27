@@ -196,7 +196,7 @@ const AddProductPage = () => {
 
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
               <p className="text-gray-600 mb-2">
-                Click to upload or drag and drop
+                Click to upload
               </p>
               <p className="text-sm text-gray-500 mb-4">
                 PNG, JPG, GIF up to 10MB

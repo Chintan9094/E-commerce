@@ -182,7 +182,7 @@ export const updateProduct = async (req, res, next) => {
     if (category) updateData.category = category;
     if (originalPrice) updateData.originalPrice = originalPrice;
     if (brand) updateData.brand = brand;
-    if (stock) updateData.stock = stock;
+    if (stock !== undefined) updateData.stock = stock;
     if (sku) updateData.sku = sku;
 
     if (req.file) {

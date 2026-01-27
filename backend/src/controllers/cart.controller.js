@@ -52,7 +52,7 @@ export const removeFromCart = async (req, res, next) => {
     if (!cart) return next(new AppError("Cart not found", 404));
 
     const itemExists = cart.items.some(
-      (i) => i.product.toString() === productId
+      (i) => i.product._id.toString() === productId
     );
 
     if (!itemExists) {
@@ -60,7 +60,7 @@ export const removeFromCart = async (req, res, next) => {
     }
 
     cart.items = cart.items.filter(
-      (i) => i.product.toString() !== productId
+      (i) => i.product._id.toString() !== productId
     );
 
     await cart.save();

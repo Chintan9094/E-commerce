@@ -2,13 +2,14 @@ import { Order } from "../models/order.model.js";
 import { Cart } from "../models/cart.model.js";
 import { AppError } from "../utils/AppError.js";
 import { Address } from "../models/address.model.js";
+import { Product } from "../models/product.model.js";
 
 export const placeOrder = async (req, res, next) => {
   try {
     const { addressId } = req.body;
 
     const cart = await Cart.findOne({ user: req.user._id }).populate(
-      "items.product"
+      "items.product",
     );
 
     if (!cart || cart.items.length === 0) {
@@ -22,6 +23,25 @@ export const placeOrder = async (req, res, next) => {
     const address = await Address.findById(addressId);
     if (!address) {
       return next(new AppError("Address not found", 400));
+    }
+
+    for (let item of cart.items) {
+      const product = item.product;
+
+      if (!product) {
+        return next(new AppError("Product not found in cart", 404));
+      }
+
+      if (product.stock < item.quantity) {
+        return next(new AppError(`Not enough stock for ${product.name}`, 400));
+      }
+
+      await Product.findByIdAndUpdate(product._id, {
+        $inc: {
+          stock: -item.quantity,
+          sales: item.quantity,
+        },
+      });
     }
 
     let subtotal = 0;
@@ -137,7 +157,7 @@ export const updateOrderStatus = async (req, res, next) => {
     order.status = status;
 
     const exists = order.statusHistory.find(
-      s => s.status.toLowerCase() === status.toLowerCase()
+      (s) => s.status.toLowerCase() === status.toLowerCase(),
     );
 
     if (!exists) {
