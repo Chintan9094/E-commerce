@@ -1,9 +1,9 @@
-import mongoose from "mongoose";
+import mongoose, { Types } from "mongoose";
 
 const orderSchema = new mongoose.Schema(
     {
         user: {
-            type: mongoose.Schema.Types.ObjectId,
+            type: Types.ObjectId,
             ref: "User",
             required: true
         },
@@ -11,7 +11,7 @@ const orderSchema = new mongoose.Schema(
         items: [
             {
                 product: {
-                    type: mongoose.Schema.Types.ObjectId,
+                    type: Types.ObjectId,
                     ref: "Product",
                     required: true
                 },
@@ -50,6 +50,14 @@ const orderSchema = new mongoose.Schema(
             date: { type: Date, default: Date.now },
             },
         ],
+        paymentMethod: {
+            type: String,
+            enum: ["cod", "online"],
+            default: "online",
+            required: true,
+        },
+        isPaid: { type: Boolean, default: false },
+        paidAt: Date,
     },
     { timestamps: true }
 );

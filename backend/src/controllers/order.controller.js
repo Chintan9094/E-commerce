@@ -6,7 +6,7 @@ import { Product } from "../models/product.model.js";
 
 export const placeOrder = async (req, res, next) => {
   try {
-    const { addressId } = req.body;
+    const { addressId, paymentMethod } = req.body;
 
     const cart = await Cart.findOne({ user: req.user._id }).populate(
       "items.product",
@@ -71,6 +71,7 @@ export const placeOrder = async (req, res, next) => {
       shipping,
       tax,
       totalAmount,
+      paymentMethod,
 
       status: "pending",
       statusHistory: [{ status: "pending" }],
@@ -281,13 +282,8 @@ export const getAllOrders = async (req, res, next) => {
 
       {
         $facet: {
-          data: [
-            { $skip: skip },
-            { $limit: limitNum },
-          ],
-          totalCount: [
-            { $count: "count" },
-          ],
+          data: [{ $skip: skip }, { $limit: limitNum }],
+          totalCount: [{ $count: "count" }],
         },
       },
     ];
@@ -334,12 +330,73 @@ export const updateOrderStatus = async (req, res, next) => {
         date: new Date(),
       });
     }
+
+    if (status === "delivered" && order.paymentMethod === "cod") {
+      order.isPaid = true;
+      order.paidAt = new Date();
+    }
+
+    if (status === "cancelled") {
+      order.isPaid = false;
+      order.paidAt = null;
+    }
+
     await order.save();
 
     res.json({
       success: true,
       message: "Order status updated",
       order,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getSellerEarnings = async (req, res, next) => {
+  try {
+    const sellerId = req.user._id;
+
+    const orders = await Order.find().populate("items.product", "seller");
+
+    const sellerOrders = orders.filter((order) =>
+      order.items.some(
+        (i) => i.product?.seller?.toString() === sellerId.toString(),
+      ),
+    );
+
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    let total = 0;
+    let thisMonth = 0;
+    let pending = 0;
+    let completedSales = 0;
+
+    sellerOrders.forEach((order) => {
+      if (order.status === "delivered") completedSales++;
+
+      if (order.isPaid || order.status === "delivered") {
+        total += order.totalAmount;
+        const dateToCheck = order.paidAt || order.createdAt;
+
+        if (dateToCheck >= startOfMonth) {
+          thisMonth += order.totalAmount;
+        }
+      } else {
+        pending += order.totalAmount;
+      }
+    });
+
+    res.json({
+      success: true,
+      stats: {
+        totalEarnings: total,
+        thisMonth,
+        pending,
+        completedSales,
+      },
+      orders: sellerOrders.filter((o) => o.status === "delivered"),
     });
   } catch (error) {
     next(error);

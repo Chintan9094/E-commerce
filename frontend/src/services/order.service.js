@@ -7,3 +7,4 @@ export const getAllOrders = (params) => {
   return api.get("/orders", { params });
 };
 export const updateOrderStatus = (id, status) => api.put(`/orders/${id}`, { status });
+export const getSellerEarnings = () => api.get("/orders/seller/earnings");

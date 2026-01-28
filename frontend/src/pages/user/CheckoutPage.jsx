@@ -63,7 +63,7 @@ const CheckoutPage = () => {
     }
 
     try {
-      const orderRes = await placeOrder({ addressId: selectedAddress });
+      const orderRes = await placeOrder({ addressId: selectedAddress, paymentMethod: paymentType });
       const order = orderRes.data.order;
       const orderId = order._id;
 

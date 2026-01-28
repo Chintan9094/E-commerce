@@ -36,34 +36,40 @@ export const createRazorpayOrder = async (req, res, next) => {
 };
 
 export const verifyPayment = async (req, res, next) => {
-    try {
-        const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId } = req.body;
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId } = req.body;
 
-        const bodyString = razorpay_order_id + "|" + razorpay_payment_id;
+    const bodyString = razorpay_order_id + "|" + razorpay_payment_id;
 
-        const expectedSignature = crypto
-        .createHmac ("sha256",process.env.RAZORPAY_KEY_SECRET)
-        .update(bodyString)
-        .digest("hex");
+    const expectedSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+      .update(bodyString)
+      .digest("hex");
 
-        if(expectedSignature === razorpay_signature) {
-            const order = await Order.findById(orderId);
-            order.paymentStatus = "paid";   
-            order.paymentId = razorpay_payment_id;
-            await order.save();
-
-            return res.json({
-                success: true,
-                message: "Payment verified & order updated!"
-            });
-            }
-
-            res.status(400).json({
-            success: false,
-            message: "Payment verification failed"
-            });
-        
-    } catch (error) {
-        next(error);
+    if (expectedSignature !== razorpay_signature) {
+      return res.status(400).json({
+        success: false,
+        message: "Payment verification failed",
+      });
     }
+
+    const order = await Order.findById(orderId);
+
+    if (!order) {
+      return next(new AppError("Order not found", 404));
+    }
+
+    order.isPaid = true;
+    order.paidAt = new Date();
+
+    await order.save();
+
+    return res.json({
+      success: true,
+      message: "Payment verified & order marked as paid",
+      order,
+    });
+  } catch (error) {
+    next(error);
+  }
 };

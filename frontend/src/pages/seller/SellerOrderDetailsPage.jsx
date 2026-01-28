@@ -2,7 +2,7 @@ import { useParams, Link } from 'react-router-dom';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import Button from '../../components/common/Button';
 import { useEffect, useState } from 'react';
-import { getOrderById } from '../../services/order.service';
+import { getOrderById, updateOrderStatus } from '../../services/order.service';
 
 const SellerOrderDetailsPage = () => {
   const { id } = useParams();
@@ -20,8 +20,14 @@ useEffect(() => {
     if (id) fetchOrder();
   }, [id]);
 
-  const updateOrderStatus = (newStatus) => {
-    console.log('Update order status to', newStatus);
+  const fetchUpdateOrderStatus = async (newStatus) => {
+    try {
+      const res = await updateOrderStatus(order._id, newStatus);
+      setOrder(res.data.order);
+      console.log(res.data.order)
+    } catch (error) {
+      console.error('Error updating order status:', error);
+    }
   };
 
   if (!order) return <div>Loading...</div>;
@@ -44,8 +50,8 @@ useEffect(() => {
           <p className="text-gray-600 mt-1">Placed on {order.date}</p>
         </div>
         <span className={`px-4 py-2 rounded-full text-sm font-medium ${
-          order.status === 'Delivered' ? 'bg-green-100 text-green-800' :
-          order.status === 'Shipped' ? 'bg-blue-100 text-blue-800' :
+          order.status === 'delivered' ? 'bg-green-100 text-green-800' :
+          order.status === 'shipped' ? 'bg-blue-100 text-blue-800' :
           'bg-yellow-100 text-yellow-800'
         }`}>
           {order.status}
@@ -67,7 +73,7 @@ useEffect(() => {
                 <p className="text-sm text-gray-600">SKU: {order.items?.[0]?.product?.sku}</p>
                 <p className="text-sm text-gray-600">Quantity: {order.items?.[0]?.quantity}</p>
                 <p className="text-lg font-semibold text-gray-900 mt-1">
-                  ₹{order.items?.[0]?.product?.price.toLocaleString()} each
+                  ₹{order.items?.[0]?.product?.price} each
                 </p>
               </div>
             </div>
@@ -117,27 +123,28 @@ useEffect(() => {
               </div>
             </div>
             <div className="mt-4 pt-4 border-t">
-              <p className="text-sm text-gray-600">
-                <span className="font-medium">Payment Method:</span> {order.paymentMethod}
+              <p>
+                <span className="font-medium">Payment Status:</span>{" "}
+                {order.isPaid ? "Paid" : "Unpaid"}
               </p>
             </div>
           </div>
 
-          {order.status === 'Pending' && (
+          {order.status === 'pending' && (
             <div className="bg-white rounded-lg shadow-md p-6">
               <h2 className="text-lg font-semibold mb-4">Update Status</h2>
               <div className="space-y-3">
                 <Button
                   variant="primary"
                   className="w-full"
-                  onClick={() => updateOrderStatus('Shipped')}
+                  onClick={() => fetchUpdateOrderStatus('shipped')}
                 >
                   Mark as Shipped
                 </Button>
                 <Button
                   variant="danger"
                   className="w-full"
-                  onClick={() => updateOrderStatus('Cancelled')}
+                  onClick={() => fetchUpdateOrderStatus('cancelled')}
                 >
                   Cancel Order
                 </Button>
@@ -145,13 +152,13 @@ useEffect(() => {
             </div>
           )}
 
-          {order.status === 'Shipped' && (
+          {order.status === 'shipped' && (
             <div className="bg-white rounded-lg shadow-md p-6">
               <h2 className="text-lg font-semibold mb-4">Update Status</h2>
               <Button
                 variant="success"
                 className="w-full"
-                onClick={() => updateOrderStatus('Delivered')}
+                onClick={() => fetchUpdateOrderStatus('delivered')}
               >
                 Mark as Delivered
               </Button>
