@@ -42,20 +42,20 @@ const userSchema = new mongoose.Schema(
     shopName: {
       type: String,
       required: function () {
-    return this.role === "seller";
-  },
+        return this.role === "seller";
+      },
     },
     gstNo: {
       type: String,
       required: function () {
-    return this.role === "seller";
-  },
+        return this.role === "seller";
+      },
       unique: true,
-      minlength: [15,"GST number must be exactly 15 characters"],
-      maxlength: [15,"GST number must be exactly 15 characters"],
+      minlength: [15, "GST number must be exactly 15 characters"],
+      maxlength: [15, "GST number must be exactly 15 characters"],
+    },
   },
-  },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 userSchema.pre("save", async function () {

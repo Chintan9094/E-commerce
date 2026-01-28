@@ -107,7 +107,7 @@ const ProductListPage = () => {
               setPage(1);
               setSearch(e.target.value);
             }}
-            className="px-4 py-2 border rounded-lg"
+            className="px-4 py-2 border border-gray-300 rounded-lg"
           />
 
           <select
@@ -116,7 +116,7 @@ const ProductListPage = () => {
               setPage(1);
               setSort(e.target.value);
             }}
-            className="px-4 py-2 border rounded-lg"
+            className="px-4 py-2 border border-gray-300 rounded-lg"
           >
             <option value="">Sort By</option>
             <option value="price-low">Price Low → High</option>

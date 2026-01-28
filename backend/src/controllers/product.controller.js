@@ -272,3 +272,28 @@ export const getMyProducts = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getTopProducts = async (req, res, next) => {
+  try {
+    const sellerId = req.user._id;
+
+    const products = await Product.find({ seller: sellerId })
+      .sort({ sales: -1 })   
+      .limit(5)             
+      .select("name sales price stock");
+
+    const formatted = products.map(p => ({
+      name: p.name,
+      sales: p.sales,
+      revenue: p.sales * p.price,
+      stock: p.stock,
+    }));
+
+    res.json({
+      success: true,
+      products: formatted,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

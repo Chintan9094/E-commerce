@@ -120,12 +120,14 @@ export const getMyProfile = (req, res) => {
 
 export const updateProfile = async (req, res, next) => {
   try {
-    const { name, email, phone, dob, gender } = req.body;
+    const { name, email, phone, dob, gender, shopName, gstNo } = req.body;
     const user = req.user;
 
     if (name) user.name = name;
     if (email) user.email = email;
     if (phone) user.phone = phone;
+    if (shopName) user.shopName = shopName;
+    if (gstNo) user.gstNo = gstNo;
     if (dob) user.dob = dob;
     if (gender) user.gender = gender;
 

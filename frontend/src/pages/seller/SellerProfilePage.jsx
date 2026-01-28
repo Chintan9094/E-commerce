@@ -1,28 +1,60 @@
-import { useState } from 'react';
-import Input from '../../components/common/Input';
-import Button from '../../components/common/Button';
+import { useEffect, useState } from "react";
+import Input from "../../components/common/Input";
+import Button from "../../components/common/Button";
+import { getProfile, updateProfile } from "../../services/auth.service";
+import { toast } from "react-toastify";
 
 const SellerProfilePage = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [shopData, setShopData] = useState({
-    shopName: 'Tech Store',
-    email: 'seller@example.com',
-    phone: '+91 9876543210',
-    address: '123 Shop Street',
-    city: 'Mumbai',
-    state: 'Maharashtra',
-    pincode: '400001',
-    gstin: 'GSTIN123456789',
-    description: 'Your trusted tech store for all electronics needs.',
+    name: "",
+    shopName: "",
+    email: "",
+    phone: "",
+    gstNo: "",
+    dob: "",
+    gender: "",
   });
+
+  const [originalData, setOriginalData] = useState({
+    name: "",
+    shopName: "",
+    email: "",
+    phone: "",
+    gstNo: "",
+    dob: "",
+    gender: "",
+  });
+
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      try {
+        const res = await getProfile();
+        setShopData(res.data.user);
+        console.log(res.data.user);
+        setOriginalData(res.data.user);
+      } catch (error) {
+        console.error("Error fetching profile data:", error);
+      }
+    };
+    fetchProfileData();
+  }, []);
 
   const handleChange = (e) => {
     setShopData({ ...shopData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsEditing(false);
+    try {
+      const res = await updateProfile(shopData);
+      setShopData(res.data.user);
+      setOriginalData(res.data.user);
+      toast.success("Profile updated successfully");
+      setIsEditing(false);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to update profile");
+    }
   };
 
   return (
@@ -31,7 +63,9 @@ const SellerProfilePage = () => {
 
       <div className="bg-white rounded-lg shadow-md p-6 lg:p-8">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">Shop Information</h2>
+          <h2 className="text-xl font-semibold text-gray-900">
+            Shop Information
+          </h2>
           {!isEditing && (
             <Button variant="primary" onClick={() => setIsEditing(true)}>
               Edit Profile
@@ -41,6 +75,15 @@ const SellerProfilePage = () => {
 
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Input
+              label="Name"
+              name="name"
+              value={shopData.name}
+              onChange={handleChange}
+              disabled={!isEditing}
+              required
+            />
+
             <div className="md:col-span-2">
               <Input
                 label="Shop Name"
@@ -72,64 +115,40 @@ const SellerProfilePage = () => {
               required
             />
 
-            <div className="md:col-span-2">
-              <Input
-                label="Address"
-                name="address"
-                value={shopData.address}
-                onChange={handleChange}
-                disabled={!isEditing}
-                required
-              />
-            </div>
-
-            <Input
-              label="City"
-              name="city"
-              value={shopData.city}
-              onChange={handleChange}
-              disabled={!isEditing}
-              required
-            />
-
-            <Input
-              label="State"
-              name="state"
-              value={shopData.state}
-              onChange={handleChange}
-              disabled={!isEditing}
-              required
-            />
-
-            <Input
-              label="Pincode"
-              name="pincode"
-              value={shopData.pincode}
-              onChange={handleChange}
-              disabled={!isEditing}
-              required
-            />
-
             <Input
               label="GSTIN"
-              name="gstin"
-              value={shopData.gstin}
+              name="gstNo"
+              value={shopData.gstNo}
               onChange={handleChange}
               disabled={!isEditing}
             />
 
-            <div className="md:col-span-2">
+            <Input
+              label="Date of Birth"
+              name="dob"
+              type="date"
+              value={shopData.dob ? shopData.dob.split("T")[0] : ""}
+              onChange={handleChange}
+              disabled={!isEditing}
+            />
+
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Shop Description
+                Gender
               </label>
-              <textarea
-                name="description"
-                value={shopData.description}
+              <select
+                name="gender"
+                value={shopData.gender}
                 onChange={handleChange}
                 disabled={!isEditing}
-                rows="4"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
-              />
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              >
+                <option value="">Select gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
             </div>
           </div>
 
@@ -138,7 +157,14 @@ const SellerProfilePage = () => {
               <Button type="submit" variant="primary">
                 Save Changes
               </Button>
-              <Button type="button" variant="secondary" onClick={() => setIsEditing(false)}>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  setShopData(originalData);
+                  setIsEditing(false);
+                }}
+              >
                 Cancel
               </Button>
             </div>

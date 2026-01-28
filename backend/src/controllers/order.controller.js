@@ -402,3 +402,41 @@ export const getSellerEarnings = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getSellerDashboardStats = async (req, res, next) => {
+  try {
+    const sellerId = req.user._id;
+
+    const totalProducts = await Product.countDocuments({ seller: sellerId });
+
+    const orders = await Order.find().populate("items.product", "seller");
+
+    const sellerOrders = orders.filter(order =>
+      order.items.some(i => i.product?.seller?.toString() === sellerId.toString())
+    );
+
+    const totalOrders = sellerOrders.length;
+    const pendingOrders = sellerOrders.filter(o => o.status === "pending").length;
+
+    let totalEarnings = 0;
+
+    sellerOrders.forEach(order => {
+      if (order.status === "delivered") {
+        totalEarnings += order.totalAmount;
+      }
+    });
+
+    res.json({
+      success: true,
+      stats: {
+        totalProducts,
+        totalOrders,
+        totalEarnings,
+        pendingOrders
+      }
+    });
+
+  } catch (error) {
+    next(error);
+  }
+};

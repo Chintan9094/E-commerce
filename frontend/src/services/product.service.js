@@ -19,3 +19,4 @@ export const updateProduct = (id, formData) =>
       "Content-Type": "multipart/form-data",
     },
   });
+export const getTopProducts = () => api.get("/products/seller/top-products");

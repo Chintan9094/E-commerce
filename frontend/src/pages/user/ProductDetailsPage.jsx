@@ -125,20 +125,19 @@ const ProductDetailsPage = () => {
 
   const stock = product?.stock || 0;
 
-let stockMessage = "";
-let stockClass = "";
+  let stockMessage = "";
+  let stockClass = "";
 
-if (stock === 0) {
-  stockMessage = "Out of Stock";
-  stockClass = "text-red-600";
-} else if (stock <= 50) {
-  stockMessage = `Only ${stock} left`;
-  stockClass = "text-orange-600";
-} else {
-  stockMessage = "In Stock";
-  stockClass = "text-green-600";
-}
-
+  if (stock === 0) {
+    stockMessage = "Out of Stock";
+    stockClass = "text-red-600";
+  } else if (stock <= 50) {
+    stockMessage = `Only ${stock} left`;
+    stockClass = "text-orange-600";
+  } else {
+    stockMessage = "In Stock";
+    stockClass = "text-green-600";
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -225,7 +224,9 @@ if (stock === 0) {
               </button>
               <span className="px-6">{quantity}</span>
               <button
-                onClick={() => setQuantity(Math.min(product?.stock, quantity + 1))}
+                onClick={() =>
+                  setQuantity(Math.min(product?.stock, quantity + 1))
+                }
                 className="px-4 py-2"
               >
                 +

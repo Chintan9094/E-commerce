@@ -8,3 +8,4 @@ export const getAllOrders = (params) => {
 };
 export const updateOrderStatus = (id, status) => api.put(`/orders/${id}`, { status });
 export const getSellerEarnings = () => api.get("/orders/seller/earnings");
+export const getSellerDashboardStats = () => api.get("/orders/seller/dashboard");

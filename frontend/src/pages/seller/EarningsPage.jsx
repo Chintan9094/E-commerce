@@ -10,7 +10,6 @@ const EarningsPage = () => {
     const fetchData = async () => {
       const res = await getSellerEarnings();
       setStats(res.data.stats);
-      console.log(res.data.stats)
       setOrders(res.data.orders);
     };
     fetchData();
@@ -39,23 +38,6 @@ const EarningsPage = () => {
           <p className="text-2xl font-bold text-blue-600">{stats?.completedSales}</p>
         </div>
       </div>
-
-      {/* <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Withdraw Earnings</h2>
-        <div className="flex flex-col md:flex-row gap-4">
-          <input
-            type="number"
-            placeholder="Enter amount"
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <button className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-            Request Withdrawal
-          </button>
-        </div>
-        <p className="text-sm text-gray-500 mt-2">
-          Minimum withdrawal amount: ₹1000
-        </p>
-      </div> */}
 
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="p-6 border-b">
