@@ -66,7 +66,8 @@ const handleLogout = async () => {
     <>
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-0 z-40 lg:hidden
+                    bg-black/30 backdrop-blur-sm"
           onClick={onClose}
         />
       )}

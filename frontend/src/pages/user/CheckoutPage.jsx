@@ -55,7 +55,6 @@ const CheckoutPage = () => {
   const shipping = subtotal > 5000 ? 0 : 99;
   const tax = subtotal * 0.18;
   const total = subtotal + shipping + tax;
-  console.log(tax)
 
   const handlePlaceOrder = async () => {
     if (!selectedAddress) {

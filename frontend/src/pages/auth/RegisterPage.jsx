@@ -42,7 +42,6 @@ const RegisterPage = () => {
 
     try {
       const res = await registerUser(formData);
-      console.log(res)
       toast.success("Registration successful");
       setUser(res.data.user);
 

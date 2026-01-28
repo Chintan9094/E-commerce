@@ -104,7 +104,6 @@ const CartPage = () => {
                 </p>
 
                 <div className="flex items-center justify-between">
-                    {console.log("qty:", item.quantity, "stock:", item.product.stock)}
                   <div className="flex flex-col">
                     <div className="flex items-center border rounded-lg">
                       <button

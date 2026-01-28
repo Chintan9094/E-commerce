@@ -91,13 +91,97 @@ export const placeOrder = async (req, res, next) => {
 
 export const getMyOrders = async (req, res, next) => {
   try {
-    const orders = await Order.find({ user: req.user._id })
-      .populate("items.product", "name price image images imageUrl sku")
-      .sort("-createdAt");
+    const { search = "", sort = "", page = 1, limit = 5 } = req.query;
+
+    const pageNum = Number(page);
+    const limitNum = Number(limit);
+    const skip = (pageNum - 1) * limitNum;
+
+    const matchStage = {};
+    if (sort) matchStage.status = sort;
+
+    const pipeline = [
+      { $match: matchStage },
+
+      {
+        $lookup: {
+          from: "users",
+          localField: "user",
+          foreignField: "_id",
+          as: "userData",
+        },
+      },
+      { $unwind: "$userData" },
+
+      { $unwind: "$items" },
+
+      {
+        $lookup: {
+          from: "products",
+          localField: "items.product",
+          foreignField: "_id",
+          as: "productData",
+        },
+      },
+      { $unwind: "$productData" },
+    ];
+
+    if (req.user.role === "seller") {
+      pipeline.push({
+        $match: {
+          "productData.seller": req.user._id,
+        },
+      });
+    } else {
+      pipeline.push({
+        $match: {
+          user: req.user._id,
+        },
+      });
+    }
+
+    if (search) {
+      pipeline.push({
+        $match: {
+          $or: [
+            { "userData.name": { $regex: search, $options: "i" } },
+            { "productData.name": { $regex: search, $options: "i" } },
+          ],
+        },
+      });
+    }
+
+    pipeline.push(
+      { $sort: { createdAt: -1 } },
+      {
+        $group: {
+          _id: "$_id",
+          user: { $first: "$userData" },
+          items: {
+            $push: {
+              product: "$productData",
+              quantity: "$items.quantity",
+            },
+          },
+          totalAmount: { $first: "$totalAmount" },
+          status: { $first: "$status" },
+          createdAt: { $first: "$createdAt" },
+        },
+      },
+      {
+        $facet: {
+          data: [{ $skip: skip }, { $limit: limitNum }],
+          totalCount: [{ $count: "count" }],
+        },
+      },
+    );
+
+    const result = await Order.aggregate(pipeline);
 
     res.json({
       success: true,
-      orders,
+      orders: result[0]?.data || [],
+      total: result[0]?.totalCount[0]?.count || 0,
     });
   } catch (error) {
     next(error);

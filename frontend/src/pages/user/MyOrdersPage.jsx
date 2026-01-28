@@ -14,7 +14,7 @@ const MyOrdersPage = () => {
     try {
       const res = await getMyOrders();
       setOrders(res.data.orders);
-      console.log("Fetched orders:----->", res.data.orders);
+      console.log(res.data.orders)
     } catch (error) {
       console.error("Error fetching orders:", error);
     }
@@ -44,7 +44,7 @@ const MyOrdersPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-200">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <h1 className="text-3xl font-bold text-gray-900 mb-8">My Orders</h1>
 
@@ -52,7 +52,7 @@ const MyOrdersPage = () => {
           {orders.map((order) => (
             <div
               key={order._id}
-              className="bg-white border rounded-2xl shadow-sm hover:shadow-md transition p-6"
+              className="bg-white rounded-2xl shadow-lg hover:shadow-md transition p-6"
             >
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>

@@ -41,7 +41,7 @@ const EditProductPage = () => {
 
         setPreview(data.product.image);
       } catch (err) {
-        console.log(err);
+        console.error(err);
       }
     };
 

@@ -13,7 +13,6 @@ useEffect(() => {
       try {
         const res = await getOrderById(id);
         setOrder(res.data.order);
-        console.log(res.data.order)
       } catch (error) {
         console.error('Error fetching order details:', error);
       }

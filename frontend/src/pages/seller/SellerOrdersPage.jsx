@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { EyeIcon } from '@heroicons/react/24/outline';
 import { useCallback, useEffect, useState } from 'react';
-import { getAllOrders } from '../../services/order.service';
+import { getMyOrders } from '../../services/order.service';
 import Button from '../../components/common/Button';
 
 const SellerOrdersPage = () => {
@@ -16,9 +16,10 @@ const SellerOrdersPage = () => {
 
 const fetchOrders = useCallback(async () => {
   try {
-    const { data } = await getAllOrders({
+    const { data } = await getMyOrders({
       search: debouncedSearch,
       sort,
+      
       page,
       limit,
     });
