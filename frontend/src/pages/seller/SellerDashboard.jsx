@@ -65,18 +65,11 @@ const SellerDashboard = () => {
     fetchRecentOrders();
   }, []);
 
-  const topProductsssss = [
-    { name: "Wireless Headphones", sales: 45, revenue: "₹1,34,955", stock: 12 },
-    { name: "Smart Watch", sales: 32, revenue: "₹2,87,968", stock: 8 },
-    { name: "Laptop Backpack", sales: 28, revenue: "₹41,972", stock: 15 },
-  ];
-
   useEffect(() => {
     const fetchTopProducts = async () => {
       try {
         const res = await getTopProducts();
         setTopProducts(res.data.products);
-        console.log(res.data.products)
       } catch (error) {
         console.error("Error fetching top products:", error);
       }
@@ -209,7 +202,7 @@ const SellerDashboard = () => {
                 </div>
                   <div className="text-right">
                     <p className="text-sm text-gray-600">
-                      Stock: {product.stock}
+                      Stock : {product.stock}
                     </p>
 
                     <p
